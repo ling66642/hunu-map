@@ -654,75 +654,38 @@ export default function MapContainer({ datasets, buildings, selectedBuilding, se
       newRouteOverlays.push(arrowMarker);
     }
 
-    // Find nearest point on route line to a building
-    const findNearestPointOnRoute = (buildingCoord, routePath) => {
-      let minDist = Infinity;
-      let nearestPoint = routePath[0];
-      
-      for (let i = 0; i < routePath.length - 1; i++) {
-        const p1 = routePath[i];
-        const p2 = routePath[i + 1];
-        
-        // Calculate projection of building point onto line segment
-        const dx = p2[0] - p1[0];
-        const dy = p2[1] - p1[1];
-        const len2 = dx * dx + dy * dy;
-        
-        let t = 0;
-        if (len2 > 0) {
-          t = Math.max(0, Math.min(1, ((buildingCoord[0] - p1[0]) * dx + (buildingCoord[1] - p1[1]) * dy) / len2));
-        }
-        
-        const projX = p1[0] + t * dx;
-        const projY = p1[1] + t * dy;
-        
-        const dist = Math.sqrt((buildingCoord[0] - projX) ** 2 + (buildingCoord[1] - projY) ** 2);
-        
-        if (dist < minDist) {
-          minDist = dist;
-          nearestPoint = [projX, projY];
-        }
+    // Route Stop Markers - create markers for each stop along the route
+    const totalCoords = activeRoute.coordinates.length;
+    const totalStops = activeRoute.stops.length;
+    
+    // Calculate which coordinate index corresponds to each stop
+    const stopIndices = [];
+    if (totalStops > 0) {
+      // First stop is always at the beginning
+      stopIndices.push(0);
+      // Middle stops are evenly distributed along the route
+      for (let i = 1; i < totalStops - 1; i++) {
+        const idx = Math.round(i * (totalCoords - 1) / (totalStops - 1));
+        stopIndices.push(idx);
       }
-      
-      return nearestPoint;
-    };
-
-    // Route Stops Markers - find nearest point on route to each building
-    activeRoute.stops.forEach((stopName, stopIndex) => {
-      // Find building by name
-      const building = buildings?.find(b => 
-        b.properties?.displayName === stopName || 
-        b.properties?.name === stopName
-      );
-      
-      if (!building) return;
-      
-      // Get building center coordinates
-      let buildingCoord;
-      if (building.geometry?.type === 'Point') {
-        buildingCoord = building.geometry.coordinates;
-      } else if (building.properties?.center) {
-        buildingCoord = building.properties.center;
-      } else {
-        return;
+      // Last stop is always at the end
+      if (totalStops > 1) {
+        stopIndices.push(totalCoords - 1);
       }
+    }
+    
+    stopIndices.forEach((stopIdx, i) => {
+      const coord = activeRoute.coordinates[stopIdx];
+      if (!coord) return;
       
-      // Convert building coord to [lat, lng] format for distance calculation
-      const buildingLatLng = [buildingCoord[1], buildingCoord[0]];
-      
-      // Find nearest point on route path
-      const nearestPoint = findNearestPointOnRoute(buildingLatLng, path);
-      
-      // Convert back to [lng, lat] for AMap
-      const markerPos = [nearestPoint[0], nearestPoint[1]];
-      
-      const isFirst = stopIndex === 0;
-      const isLast = stopIndex === activeRoute.stops.length - 1;
+      const pos = [coord[1], coord[0]];
+      const isFirst = i === 0;
+      const isLast = i === totalStops - 1;
       const markerSize = isFirst || isLast ? 32 : 26;
       const borderWidth = isFirst || isLast ? 4 : 3;
       
       const marker = new AMap.Marker({
-        position: markerPos,
+        position: pos,
         content: `<div class="route-marker" style="
           width: ${markerSize}px; height: ${markerSize}px;
           background: linear-gradient(135deg, ${routeColor} 0%, ${darkenColor(routeColor, 30)} 100%);
@@ -736,7 +699,7 @@ export default function MapContainer({ datasets, buildings, selectedBuilding, se
           box-shadow: 0 3px 10px rgba(0,0,0,0.25), 0 0 0 2px ${routeColor}40;
           position: relative;
         ">
-          ${isFirst ? '起' : isLast ? '终' : stopIndex}
+          ${isFirst ? '起' : isLast ? '终' : i + 1}
           ${isFirst || isLast ? `<div style="
             position: absolute;
             top: -6px; right: -6px;
@@ -751,9 +714,10 @@ export default function MapContainer({ datasets, buildings, selectedBuilding, se
         zIndex: isFirst || isLast ? 170 : 165
       });
 
+      const stopName = activeRoute.stops[i];
       marker.on('mouseover', () => {
         infoWindowRef.current.setContent(`<div class="campus-tooltip">${stopName}</div>`);
-        infoWindowRef.current.open(map, markerPos);
+        infoWindowRef.current.open(map, pos);
       });
 
       marker.on('mouseout', () => {
