@@ -1,0 +1,268 @@
+[
+  {
+    "properties": {
+      "id": "B0FFF2WK6L",
+      "name": "湖南师范大学师大田径场",
+      "type": "运动场所",
+      "address": "麓山路36号湖南师范大学",
+      "is_inside": 1
+    },
+    "geometry_type": "Point",
+    "coordinates": [
+      241.19084298645612,
+      -364.71387423574924
+    ]
+  },
+  {
+    "properties": {
+      "id": "B0KU7SBSIX",
+      "name": "湖南师范大学江湾体育馆",
+      "type": "综合体育馆",
+      "address": "麓山路259号(湖南师大地铁站2号口步行130米)",
+      "is_inside": 1
+    },
+    "geometry_type": "Point",
+    "coordinates": [
+      -85.48189350531902,
+      -302.677598527167
+    ]
+  },
+  {
+    "properties": {
+      "id": "B0J2HCMCSD",
+      "name": "湖南师范大学(南院校区)田径场",
+      "type": "运动场所",
+      "address": "师南路湖南师范大学体育学院",
+      "is_inside": 0
+    },
+    "geometry_type": "Point",
+    "coordinates": [
+      -854.9752405749168,
+      -2476.5762847876176
+    ]
+  },
+  {
+    "properties": {
+      "id": "B02DB0UMDN",
+      "name": "湖南师范大学学生活动中心",
+      "type": "休闲场所",
+      "address": "麓山路36号湖南师范大学",
+      "is_inside": 1
+    },
+    "geometry_type": "Point",
+    "coordinates": [
+      -273.61324731935747,
+      -214.04428266361356
+    ]
+  },
+  {
+    "properties": {
+      "id": "B0FFGA712S",
+      "name": "湖南师范大学(南院校区)体育学院游泳馆",
+      "type": "游泳馆",
+      "address": "麓山南路638号湖南师范大学体育学院内",
+      "is_inside": 0
+    },
+    "geometry_type": "Point",
+    "coordinates": [
+      -1042.3382551505929,
+      -2582.6270810905844
+    ]
+  },
+  {
+    "properties": {
+      "id": "B0FFLBSZR1",
+      "name": "湖南师范大学(南院校区)体育学院体育馆",
+      "type": "综合体育馆",
+      "address": "湖南师范大学体育学院德智园",
+      "is_inside": 0
+    },
+    "geometry_type": "Point",
+    "coordinates": [
+      -953.4780984367244,
+      -2433.399313254282
+    ]
+  },
+  {
+    "properties": {
+      "id": "B0FFHQ99ON",
+      "name": "湖南师范大学乒乓球训练馆",
+      "type": "乒乓球馆",
+      "address": "麓山路36号湖南师范大学",
+      "is_inside": 1
+    },
+    "geometry_type": "Point",
+    "coordinates": [
+      -294.6703106856439,
+      -196.0459247934632
+    ]
+  },
+  {
+    "properties": {
+      "id": "B0JGGUNS77",
+      "name": "湖南师范大学五舍篮球场",
+      "type": "篮球场馆",
+      "address": "麓山路36号湖南师范大学",
+      "is_inside": 1
+    },
+    "geometry_type": "Point",
+    "coordinates": [
+      -221.58757731877267,
+      -196.36784713435918
+    ]
+  },
+  {
+    "properties": {
+      "id": "B0JGPZJM4Z",
+      "name": "湖南师范大学医学院田径场",
+      "type": "运动场所",
+      "address": "西湖街道桐梓坡路371号湖南师范大学医学部(咸嘉湖校区)",
+      "is_inside": 0
+    },
+    "geometry_type": "Point",
+    "coordinates": [
+      -1365.1267355355667,
+      3146.3489923807792
+    ]
+  },
+  {
+    "properties": {
+      "id": "B0LGZSUO6E",
+      "name": "湖南师范大学医学院东篮球场",
+      "type": "篮球场馆",
+      "address": "双塘路与嘉桐街交叉口西南280米",
+      "is_inside": 0
+    },
+    "geometry_type": "Point",
+    "coordinates": [
+      -1364.2173276343383,
+      3016.1248336862773
+    ]
+  },
+  {
+    "properties": {
+      "id": "B0L1CA5QM0",
+      "name": "湖南师范大学(二里半校区)-二号篮球场",
+      "type": "篮球场馆",
+      "address": "木兰路与向阳路交叉口东20米",
+      "is_inside": 1
+    },
+    "geometry_type": "Point",
+    "coordinates": [
+      -244.0296119308332,
+      -177.50146748824045
+    ]
+  },
+  {
+    "properties": {
+      "id": "B0JGN5TYUO",
+      "name": "湖南师范大学树达学院篮球场",
+      "type": "篮球场馆",
+      "address": "溁左路与西二环辅路交叉口东140米",
+      "is_inside": 0
+    },
+    "geometry_type": "Point",
+    "coordinates": [
+      -2556.3994404681725,
+      -2238.7463455740362
+    ]
+  },
+  {
+    "properties": {
+      "id": "B0M69HBIEN",
+      "name": "咸嘉学生公寓篮球场",
+      "type": "篮球场馆",
+      "address": "望岳南路与润物路交叉口西北120米",
+      "is_inside": 0
+    },
+    "geometry_type": "Point",
+    "coordinates": [
+      -2829.6390897163656,
+      3232.839261330664
+    ]
+  },
+  {
+    "properties": {
+      "id": "B0M61HHVKN",
+      "name": "咸嘉学生公寓篮球场",
+      "type": "篮球场馆",
+      "address": "望岳路与桐梓坡路交叉口西南180米",
+      "is_inside": 0
+    },
+    "geometry_type": "Point",
+    "coordinates": [
+      -2875.4232498401543,
+      3337.4585798196495
+    ]
+  },
+  {
+    "properties": {
+      "id": "B0HR06L0IM",
+      "name": "湖师大天马公寓-羽毛球场",
+      "type": "羽毛球场",
+      "address": "天马路210号",
+      "is_inside": 0
+    },
+    "geometry_type": "Point",
+    "coordinates": [
+      -290.8982979224529,
+      -2100.3937796903774
+    ]
+  },
+  {
+    "properties": {
+      "id": "B0FFL17KFY",
+      "name": "咸嘉国际网球俱乐部",
+      "type": "体育休闲服务场所",
+      "address": "晨风路72号咸嘉广场内(北侧)",
+      "is_inside": 0
+    },
+    "geometry_type": "Point",
+    "coordinates": [
+      -2332.1032613553107,
+      3737.053886445705
+    ]
+  },
+  {
+    "properties": {
+      "id": "B0G21H91B3",
+      "name": "集美游泳健身(师大店)",
+      "type": "健身中心",
+      "address": "爱民路115号师大附中体育馆1楼-集美游泳健身馆",
+      "is_inside": 1
+    },
+    "geometry_type": "Point",
+    "coordinates": [
+      382.33655073249247,
+      16.509747233707458
+    ]
+  },
+  {
+    "properties": {
+      "id": "B0I1JP5BKZ",
+      "name": "Z+健身(湖大天马店)",
+      "type": "健身中心",
+      "address": "阜埠河路天穆大酒店三楼",
+      "is_inside": 0
+    },
+    "geometry_type": "Point",
+    "coordinates": [
+      -280.4633523216471,
+      -2274.1641820711084
+    ]
+  },
+  {
+    "properties": {
+      "id": "B0LB7U57SK",
+      "name": "璞瑜健身(天马店)",
+      "type": "体育休闲服务场所",
+      "address": "天马路216路师大天马美食广场三楼",
+      "is_inside": 0
+    },
+    "geometry_type": "Point",
+    "coordinates": [
+      -232.52802560618147,
+      -2105.0197138870135
+    ]
+  }
+]

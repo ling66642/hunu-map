@@ -662,9 +662,6 @@ export default function MapContainer({ datasets, buildings, selectedBuilding, se
       const markerSize = isFirst || isLast ? 32 : 26;
       const borderWidth = isFirst || isLast ? 4 : 3;
       
-      // Get stop name for this coordinate
-      const stopName = isFirst ? activeRoute.stops[0] : isLast ? activeRoute.stops[activeRoute.stops.length - 1] : activeRoute.stops[index];
-      
       const marker = new AMap.Marker({
         position: pos,
         content: `<div class="route-marker" style="
@@ -695,32 +692,8 @@ export default function MapContainer({ datasets, buildings, selectedBuilding, se
         zIndex: isFirst || isLast ? 170 : 165
       });
 
-      // Add building name label next to marker
-      if (stopName) {
-        const nameLabel = new AMap.Marker({
-          position: pos,
-          content: `<div style="
-            background: rgba(255,255,255,0.95);
-            color: #1e293b;
-            font-size: 11px;
-            font-weight: 600;
-            padding: 3px 8px;
-            border-radius: 4px;
-            border: 1px solid ${routeColor}60;
-            box-shadow: 0 2px 6px rgba(0,0,0,0.15);
-            white-space: nowrap;
-            transform: translate(100%, -50%);
-            pointer-events: none;
-          ">${stopName}</div>`,
-          offset: new AMap.Pixel(markerSize / 2 + 4, 0),
-          zIndex: isFirst || isLast ? 169 : 164
-        });
-        map.add(nameLabel);
-        newRouteOverlays.push(nameLabel);
-      }
-
       marker.on('mouseover', () => {
-        infoWindowRef.current.setContent(`<div class="campus-tooltip">${stopName}</div>`);
+        infoWindowRef.current.setContent(`<div class="campus-tooltip">${activeRoute.stops[index]}</div>`);
         infoWindowRef.current.open(map, pos);
       });
 
