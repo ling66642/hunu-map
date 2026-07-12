@@ -1,6 +1,6 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import {
-  BookOpen, Building2, ChevronLeft, Dumbbell, GraduationCap,
+  BookOpen, Building2, Camera, ChevronLeft, ChevronRight, Dumbbell, GraduationCap,
   Layers3, MapPin, Menu, Route, Search, Utensils, X
 } from 'lucide-react';
 import MapContainer from './components/MapContainer';
@@ -22,6 +22,15 @@ const routes = [
   { id:'routeD', title:'路线D', time:'约20分钟', color:'#ca8a04', stops:['经纬楼','研究生院','景德楼','忠烈祠','教务处'], coordinates:[[28.192520,112.943353],[28.192166,112.943087],[28.192697,112.942562],[28.193343,112.942264],[28.193388,112.941551],[28.193423,112.941325],[28.193508,112.941027],[28.193623,112.940871],[28.193663,112.940696],[28.193651,112.940508],[28.193623,112.940359],[28.193548,112.940301],[28.193440,112.940320],[28.193314,112.940398],[28.193246,112.940515],[28.193183,112.940554],[28.192275,112.940664],[28.192235,112.939906],[28.192178,112.939620],[28.192149,112.939446],[28.192212,112.939232],[28.192395,112.938953]] },
   { id:'routeE', title:'路线E', time:'约18分钟', color:'#059669', stops:['逸夫图书馆','研五舍','高师楼','文渊楼','经纬楼','忠烈祠'], coordinates:[[28.189485,112.942794],[28.189931,112.942769],[28.189894,112.941690],[28.190676,112.941682],[28.190852,112.941620],[28.190853,112.941539],[28.191572,112.941532],[28.191584,112.941448],[28.191669,112.941428],[28.191726,112.941474],[28.191749,112.941519],[28.192244,112.941504],[28.192321,112.941533],[28.192303,112.940678],[28.192683,112.940625]] }
 ];
+
+const routeStopDetails = {
+  '逸夫图书馆': {
+    image: '/images/buildings/yifu-library.jpg',
+    eyebrow: '书香地标 · 图书文化',
+    description: '从路线的第一站开始，在林荫与书香之间认识二里半校区。照片卡片会跟随路线节点，为每一站补充更直观的校园印象。',
+    tags: ['校园地标', '图书文化', '推荐拍照点']
+  }
+};
 
 // Constants for GCJ-02 transformation (Lushan Road alignment)
 const PI = Math.PI;
@@ -110,6 +119,7 @@ export default function CampusMapApp(){
   const [focusName,setFocusName]=useState(null);
   const [routeList, setRouteList] = useState(routes);
   const [route,setRoute]=useState(routes[0]);
+  const [activeRouteStop,setActiveRouteStop]=useState(null);
   const [sidebarOpen,setSidebarOpen]=useState(true);
 
   useEffect(()=>{
@@ -147,6 +157,42 @@ export default function CampusMapApp(){
     return categoryMatch&&searchMatch;
   })||[],[datasets,category,query]);
 
+  // 选中推荐路线后，地图仅绘制该路线途经点对应的建筑。
+  // 此处使用完整建筑数据匹配，避免侧栏的分类或搜索条件误隐藏途经建筑。
+  const mapBuildings=useMemo(()=>{
+    if (route.id==='none') return buildings;
+
+    const stops=route.stops.map(stop=>stop.trim()).filter(Boolean);
+    return datasets?.buildings.features.filter(feature=>{
+      const name=(feature.properties?.displayName||'').trim();
+      return name&&stops.some(stop=>name.includes(stop)||stop.includes(name));
+    })||[];
+  },[datasets,buildings,route]);
+
+  const showRouteStop=useCallback((stop)=>{
+    setActiveRouteStop(stop);
+    setSelected(null);
+  },[]);
+
+  const selectRoute=(nextRoute)=>{
+    setRoute(nextRoute);
+    setSelected(null);
+    setActiveRouteStop(nextRoute.id==='none'||!nextRoute.stops.length?null:{
+      name:nextRoute.stops[0],
+      index:0,
+      total:nextRoute.stops.length
+    });
+  };
+
+  const changeRouteStop=(step)=>{
+    if(!activeRouteStop||route.id==='none') return;
+    const nextIndex=activeRouteStop.index+step;
+    if(nextIndex<0||nextIndex>=route.stops.length) return;
+    showRouteStop({name:route.stops[nextIndex],index:nextIndex,total:route.stops.length});
+  };
+
+  const activeRouteStopDetails=activeRouteStop?routeStopDetails[activeRouteStop.name]:null;
+
   const locate=(feature)=>{setSelected(feature);setFocusName(feature.properties.displayName);};
 
   return <div className="standalone-map-app">
@@ -170,7 +216,7 @@ export default function CampusMapApp(){
               <button 
                 key={r.id} 
                 className={`route-card ${route.id === r.id ? 'active' : ''}`}
-                onClick={() => setRoute(r)}
+                onClick={() => selectRoute(r)}
               >
                 <div className="route-card-header">
                   <span className="route-color-dot" style={{ background: r.color }}></span>
@@ -199,8 +245,31 @@ export default function CampusMapApp(){
       </aside>
 
       <main className="standalone-map-main">
-        {!datasets?<div className="standalone-loading"><span></span><p>正在绘制校园地图……</p></div>:<MapContainer datasets={datasets} buildings={buildings} selectedBuilding={selected} setSelectedBuilding={setSelected} activeRoute={route.id==='none'?null:route} focusName={focusName}/>} 
+        {!datasets?<div className="standalone-loading"><span></span><p>正在绘制校园地图……</p></div>:<MapContainer datasets={datasets} buildings={mapBuildings} selectedBuilding={selected} setSelectedBuilding={setSelected} activeRoute={route.id==='none'?null:route} focusName={focusName} onRouteStopSelect={showRouteStop}/>}
         <div className="standalone-legend"><b>图例</b><span><i className="teaching"></i>教学科研</span><span><i className="library"></i>图书文化</span><span><i className="sports"></i>体育活动</span><span><i className="dining"></i>餐饮生活</span><span><i className="residence"></i>学生宿舍</span></div>
+        {activeRouteStop&&<section className="route-photo-card">
+          <div className={`route-photo-media ${activeRouteStopDetails?'has-photo':'is-placeholder'}`}>
+            {activeRouteStopDetails?<img src={activeRouteStopDetails.image} alt={activeRouteStop.name}/>:<div className="route-photo-placeholder"><Camera size={32}/><span>这处途经点的照片即将补充</span></div>}
+            <div className="route-photo-shade"></div>
+            <button className="route-photo-close" onClick={()=>setActiveRouteStop(null)} aria-label="关闭照片卡片"><X size={17}/></button>
+            <div className="route-photo-heading">
+              <span style={{'--route-accent':route.color}}>{route.title} · 第 {activeRouteStop.index+1} 站</span>
+              <h2>{activeRouteStop.name}</h2>
+            </div>
+          </div>
+          <div className="route-photo-content">
+            <p>{activeRouteStopDetails?.eyebrow||'校园途经点 · 照片待补充'}</p>
+            <div className="route-photo-description">{activeRouteStopDetails?.description||'这里将展示建筑照片、校园故事和游览提示，让推荐路线的每一个节点都更有记忆点。'}</div>
+            {activeRouteStopDetails&&<div className="route-photo-tags">{activeRouteStopDetails.tags.map(tag=><span key={tag}>{tag}</span>)}</div>}
+            <div className="route-photo-footer">
+              <span>{activeRouteStop.index+1} / {activeRouteStop.total}</span>
+              <div>
+                <button onClick={()=>changeRouteStop(-1)} disabled={activeRouteStop.index===0} aria-label="上一站"><ChevronLeft size={17}/></button>
+                <button onClick={()=>changeRouteStop(1)} disabled={activeRouteStop.index===activeRouteStop.total-1} aria-label="下一站"><ChevronRight size={17}/></button>
+              </div>
+            </div>
+          </div>
+        </section>}
         {selected&&<section className="standalone-detail"><button onClick={()=>setSelected(null)}><X size={16}/></button><p>{categories.find(c=>c.id===selected.properties.category)?.label||'校园设施'}</p><h2>{selected.properties.displayName}</h2><div><MapPin size={15}/>湖南师范大学二里半校区</div><span>点击地图空白区域可继续浏览，滚轮缩放查看建筑与道路细节。</span></section>}
       </main>
     </div>

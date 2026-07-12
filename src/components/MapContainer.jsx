@@ -154,7 +154,20 @@ function bindEvents(overlay, handlers, feature) {
   });
 }
 
-export default function MapContainer({ datasets, buildings, selectedBuilding, setSelectedBuilding, activeRoute, focusName }) {
+function setModelBuildingVisibility(modelRoot, allowedBuildingIds) {
+  if (!modelRoot) return;
+
+  modelRoot.traverse((child) => {
+    if (!child.isMesh) return;
+
+    const modelBuildingId = child.name.match(/^building_\d+_(\d+)_part_/)?.[1];
+    child.visible = allowedBuildingIds === null || (
+      modelBuildingId && allowedBuildingIds.has(modelBuildingId)
+    );
+  });
+}
+
+export default function MapContainer({ datasets, buildings, selectedBuilding, setSelectedBuilding, activeRoute, focusName, onRouteStopSelect }) {
   const rootRef = useRef(null);
   const mapRef = useRef(null);
   
@@ -172,6 +185,8 @@ export default function MapContainer({ datasets, buildings, selectedBuilding, se
   const routeOverlaysRef = useRef([]);
   const infoWindowRef = useRef(null);
   const glCustomLayerRef = useRef(null);
+  const modelRootRef = useRef(null);
+  const visibleModelBuildingIdsRef = useRef(null);
 
   // Sync is3D ref
   useEffect(() => {
@@ -355,6 +370,8 @@ export default function MapContainer({ datasets, buildings, selectedBuilding, se
               }
             });
             
+            modelRootRef.current = object;
+            setModelBuildingVisibility(object, visibleModelBuildingIdsRef.current);
             scene.add(object);
             map.render();
           });
@@ -395,6 +412,20 @@ export default function MapContainer({ datasets, buildings, selectedBuilding, se
       }
     };
   }, [amapLoaded, datasets]);
+
+  // 推荐路线激活时，3D 白模仅保留途经点对应的建筑。
+  useEffect(() => {
+    const allowedBuildingIds = activeRoute
+      ? new Set(buildings
+        .map(feature => feature.properties?.id)
+        .filter(id => id !== undefined && id !== null)
+        .map(String))
+      : null;
+
+    visibleModelBuildingIdsRef.current = allowedBuildingIds;
+    setModelBuildingVisibility(modelRootRef.current, allowedBuildingIds);
+    mapRef.current?.render();
+  }, [activeRoute, buildings]);
 
   // 3. Render Buildings and Labels (runs when buildings list or selection/style changes)
   useEffect(() => {
@@ -772,6 +803,10 @@ export default function MapContainer({ datasets, buildings, selectedBuilding, se
         zIndex: isFirst || isLast ? 170 : 165
       });
 
+      marker.on('click', () => {
+        onRouteStopSelect?.({ name: stopName, index: i, total: totalStops });
+      });
+
       marker.on('mouseover', () => {
         infoWindowRef.current.setContent(`<div class="campus-tooltip">${stopName}</div>`);
         infoWindowRef.current.open(map, pos);
@@ -787,7 +822,7 @@ export default function MapContainer({ datasets, buildings, selectedBuilding, se
 
     routeOverlaysRef.current = newRouteOverlays;
 
-  }, [activeRoute, amapLoaded, datasets]);
+  }, [activeRoute, amapLoaded, datasets, onRouteStopSelect]);
 
   // 5. Handle focusName (Fly to selected building)
   useEffect(() => {
