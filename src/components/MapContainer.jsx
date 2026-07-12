@@ -826,12 +826,18 @@ export default function MapContainer({ datasets, buildings, selectedBuilding, se
 
   // 5. Handle focusName (Fly to selected building)
   useEffect(() => {
-    if (!focusName || !datasets || !mapRef.current || !amapLoaded) return;
-    const feature = datasets.buildings.features.find(item => item.properties?.displayName.includes(focusName) || focusName.includes(item.properties?.displayName));
+    const targetName = typeof focusName === 'string' ? focusName : focusName?.name;
+    if (!targetName || !datasets || !mapRef.current || !amapLoaded) return;
+
+    const feature = datasets.buildings.features.find(item => {
+      const buildingName = item.properties?.displayName || '';
+      return buildingName.includes(targetName) || targetName.includes(buildingName);
+    });
+
     if (feature) {
       setSelectedBuilding(feature);
       const center = featureCenterAMap(feature);
-      mapRef.current.setZoomAndCenter(18.5, center);
+      mapRef.current.setZoomAndCenter(19, center, false, 650);
     }
   }, [focusName, datasets, setSelectedBuilding, amapLoaded]);
 

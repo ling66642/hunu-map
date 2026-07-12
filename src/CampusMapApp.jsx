@@ -172,6 +172,7 @@ export default function CampusMapApp(){
   const showRouteStop=useCallback((stop)=>{
     setActiveRouteStop(stop);
     setSelected(null);
+    setFocusName({ name: stop.name, requestedAt: Date.now() });
   },[]);
 
   const selectRoute=(nextRoute)=>{
@@ -193,7 +194,10 @@ export default function CampusMapApp(){
 
   const activeRouteStopDetails=activeRouteStop?routeStopDetails[activeRouteStop.name]:null;
 
-  const locate=(feature)=>{setSelected(feature);setFocusName(feature.properties.displayName);};
+  const locate=(feature)=>{
+    setSelected(feature);
+    setFocusName({ name: feature.properties.displayName, requestedAt: Date.now() });
+  };
 
   return <div className="standalone-map-app">
     <header className="map-topbar">
@@ -213,10 +217,18 @@ export default function CampusMapApp(){
           <p><Route size={15}/>推荐路线</p>
           <div className="route-cards">
             {routeList.map(r => (
-              <button 
-                key={r.id} 
+              <div
+                key={r.id}
                 className={`route-card ${route.id === r.id ? 'active' : ''}`}
+                role="button"
+                tabIndex={0}
+                aria-pressed={route.id === r.id}
                 onClick={() => selectRoute(r)}
+                onKeyDown={(event)=>{
+                  if(event.key!=='Enter'&&event.key!==' ') return;
+                  event.preventDefault();
+                  selectRoute(r);
+                }}
               >
                 <div className="route-card-header">
                   <span className="route-color-dot" style={{ background: r.color }}></span>
@@ -231,14 +243,29 @@ export default function CampusMapApp(){
                 {r.id !== 'none' && route.id === r.id && (
                   <div className="route-stops-preview">
                     {r.stops.map((stop, i) => (
-                      <span key={i} className="route-stop-tag">
+                      <span
+                        key={i}
+                        className={`route-stop-tag ${activeRouteStop?.index===i?'active':''}`}
+                        role="button"
+                        tabIndex={0}
+                        onClick={(event)=>{
+                          event.stopPropagation();
+                          showRouteStop({name:stop,index:i,total:r.stops.length});
+                        }}
+                        onKeyDown={(event)=>{
+                          if(event.key!=='Enter'&&event.key!==' ') return;
+                          event.preventDefault();
+                          event.stopPropagation();
+                          showRouteStop({name:stop,index:i,total:r.stops.length});
+                        }}
+                      >
                         <span className="route-stop-num" style={{ background: r.color }}>{i + 1}</span>
                         {stop}
                       </span>
                     ))}
                   </div>
                 )}
-              </button>
+              </div>
             ))}
           </div>
         </div>
