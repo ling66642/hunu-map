@@ -1,0 +1,124 @@
+{
+  "type": "FeatureCollection",
+  "features": [
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "B0GU47UWJ6",
+        "name": "英姿体育羽毛球培训(学堂坡校区)",
+        "type": "羽毛球场",
+        "address": "师大附中停车场",
+        "is_inside": 1
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          112.94799216806459,
+          28.190353657214015
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "B0G21H91B3",
+        "name": "集美游泳健身(师大店)",
+        "type": "健身中心",
+        "address": "爱民路115号师大附中体育馆1楼-集美游泳健身馆",
+        "is_inside": 1
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          112.9482952881182,
+          28.190775007510926
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "B0FFKFN6OT",
+        "name": "意志力24H健身",
+        "type": "健身中心",
+        "address": "湖南师范大学附属中学南门东70米",
+        "is_inside": 1
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          112.9464277107183,
+          28.187446926641087
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "B0MBNSSJTD",
+        "name": "莱维呗呗24H健身馆",
+        "type": "健身中心",
+        "address": "岳民巷18号红枫大厦2层(如家酒店大厅电梯)270号",
+        "is_inside": 0
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          112.94702327767814,
+          28.197528021575035
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "B0GRG5PLY6",
+        "name": "Vigor健身私教馆(麓山后街店)",
+        "type": "健身中心",
+        "address": "橘子洲街道新民路麓山后街2层212",
+        "is_inside": 0
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          112.9470382508666,
+          28.197347983410666
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "B0G1PUL3G5",
+        "name": "健客健身",
+        "type": "健身中心",
+        "address": "橘子洲街道槐树坪201号",
+        "is_inside": 0
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          112.94973806334757,
+          28.192629864229424
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "B0FFG8W8Y5",
+        "name": "星燃奥体健身运动中心(麓山后街店)",
+        "type": "购物相关场所",
+        "address": "麓山后街4层",
+        "is_inside": 0
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          112.94745908762859,
+          28.197383072797383
+        ]
+      }
+    }
+  ]
+}
