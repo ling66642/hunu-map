@@ -658,24 +658,34 @@ export default function MapContainer({ datasets, buildings, selectedBuilding, se
     const totalCoords = activeRoute.coordinates.length;
     const totalStops = activeRoute.stops.length;
     
-    // Calculate which coordinate index corresponds to each stop
-    const stopIndices = [];
+    // Calculate positions for each stop (on line segments, not at turning points)
+    const stopPositions = [];
     if (totalStops > 0) {
       // First stop is always at the beginning
-      stopIndices.push(0);
-      // Middle stops are evenly distributed along the route
+      stopPositions.push(activeRoute.coordinates[0]);
+      
+      // Middle stops are placed at midpoints of line segments
       for (let i = 1; i < totalStops - 1; i++) {
-        const idx = Math.round(i * (totalCoords - 1) / (totalStops - 1));
-        stopIndices.push(idx);
+        // Calculate segment index for this stop
+        const segmentIndex = Math.floor(i * (totalCoords - 1) / (totalStops - 1));
+        const nextIndex = Math.min(segmentIndex + 1, totalCoords - 1);
+        
+        // Get midpoint of this segment
+        const p1 = activeRoute.coordinates[segmentIndex];
+        const p2 = activeRoute.coordinates[nextIndex];
+        const midLat = (p1[0] + p2[0]) / 2;
+        const midLon = (p1[1] + p2[1]) / 2;
+        
+        stopPositions.push([midLat, midLon]);
       }
+      
       // Last stop is always at the end
       if (totalStops > 1) {
-        stopIndices.push(totalCoords - 1);
+        stopPositions.push(activeRoute.coordinates[totalCoords - 1]);
       }
     }
     
-    stopIndices.forEach((stopIdx, i) => {
-      const coord = activeRoute.coordinates[stopIdx];
+    stopPositions.forEach((coord, i) => {
       if (!coord) return;
       
       const pos = [coord[1], coord[0]];
