@@ -654,13 +654,17 @@ export default function MapContainer({ datasets, buildings, selectedBuilding, se
       newRouteOverlays.push(arrowMarker);
     }
 
-    // Route Stops Markers (enhanced style)
-    activeRoute.coordinates.forEach((coord, index) => {
+    // Route Start and End Markers only
+    const startIndex = 0;
+    const endIndex = activeRoute.coordinates.length - 1;
+    
+    [startIndex, endIndex].forEach((index) => {
+      const coord = activeRoute.coordinates[index];
       const pos = [coord[1], coord[0]];
       const isFirst = index === 0;
-      const isLast = index === activeRoute.coordinates.length - 1;
-      const markerSize = isFirst || isLast ? 32 : 26;
-      const borderWidth = isFirst || isLast ? 4 : 3;
+      const isLast = index === endIndex;
+      const markerSize = 32;
+      const borderWidth = 4;
       
       const marker = new AMap.Marker({
         position: pos,
@@ -672,13 +676,13 @@ export default function MapContainer({ datasets, buildings, selectedBuilding, se
           display: grid;
           place-items: center;
           color: #fff;
-          font-size: ${isFirst || isLast ? '12' : '10'}px;
+          font-size: 12px;
           font-weight: 700;
           box-shadow: 0 3px 10px rgba(0,0,0,0.25), 0 0 0 2px ${routeColor}40;
           position: relative;
         ">
-          ${isFirst ? '起' : isLast ? '终' : index + 1}
-          ${isFirst || isLast ? `<div style="
+          ${isFirst ? '起' : '终'}
+          <div style="
             position: absolute;
             top: -6px; right: -6px;
             width: 12px; height: 12px;
@@ -686,14 +690,15 @@ export default function MapContainer({ datasets, buildings, selectedBuilding, se
             border: 2px solid #fff;
             border-radius: 50%;
             box-shadow: 0 2px 4px rgba(0,0,0,0.2);
-          "></div>` : ''}
+          "></div>
         </div>`,
         offset: new AMap.Pixel(-markerSize / 2, -markerSize / 2),
-        zIndex: isFirst || isLast ? 170 : 165
+        zIndex: 170
       });
 
+      const stopName = isFirst ? activeRoute.stops[0] : activeRoute.stops[activeRoute.stops.length - 1];
       marker.on('mouseover', () => {
-        infoWindowRef.current.setContent(`<div class="campus-tooltip">${activeRoute.stops[index]}</div>`);
+        infoWindowRef.current.setContent(`<div class="campus-tooltip">${stopName}</div>`);
         infoWindowRef.current.open(map, pos);
       });
 
