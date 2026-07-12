@@ -553,6 +553,52 @@ export default function MapContainer({ datasets, buildings, selectedBuilding, se
 
   }, [buildings, selectedBuilding, amapLoaded, setSelectedBuilding, mapStyle]);
 
+  // Helper function: find nearest point on line segment to a point
+  function findNearestPointOnSegment(px, py, ax, ay, bx, by) {
+    const dx = bx - ax;
+    const dy = by - ay;
+    const lenSq = dx * dx + dy * dy;
+    if (lenSq === 0) return [ax, ay];
+    
+    let t = ((px - ax) * dx + (py - ay) * dy) / lenSq;
+    t = Math.max(0, Math.min(1, t));
+    
+    return [ax + t * dx, ay + t * dy];
+  }
+
+  // Helper function: find nearest point on a polyline to a point
+  function findNearestPointOnPolyline(px, py, polyline) {
+    let minDist = Infinity;
+    let nearestPoint = null;
+    
+    for (let i = 0; i < polyline.length - 1; i++) {
+      const [ax, ay] = polyline[i];
+      const [bx, by] = polyline[i + 1];
+      const point = findNearestPointOnSegment(px, py, ax, ay, bx, by);
+      const dist = Math.sqrt((px - point[0]) ** 2 + (py - point[1]) ** 2);
+      
+      if (dist < minDist) {
+        minDist = dist;
+        nearestPoint = point;
+      }
+    }
+    
+    return nearestPoint;
+  }
+
+  // Helper function: find building center by name
+  function findBuildingCenter(name, buildingsData) {
+    if (!buildingsData || !buildingsData.features) return null;
+    
+    for (const feature of buildingsData.features) {
+      const displayName = feature.properties?.displayName || feature.properties?.name || '';
+      if (displayName.includes(name) || name.includes(displayName)) {
+        return featureCenterAMap(feature);
+      }
+    }
+    return null;
+  }
+
   // 4. Render Active Route
   useEffect(() => {
     const map = mapRef.current;
@@ -654,87 +700,45 @@ export default function MapContainer({ datasets, buildings, selectedBuilding, se
       newRouteOverlays.push(arrowMarker);
     }
 
-    // Helper function to find foot of perpendicular from building to line
-    const findFootOfPerpendicular = (buildingCoord, lineCoords) => {
-      let minDist = Infinity;
-      let footPoint = null;
+    // Route Stop Markers - create markers at building perpendicular points
+    const totalStops = activeRoute.stops.length;
+    
+    activeRoute.stops.forEach((stopName, i) => {
+      const isFirst = i === 0;
+      const isLast = i === totalStops - 1;
       
-      for (let i = 0; i < lineCoords.length - 1; i++) {
-        const p1 = lineCoords[i];
-        const p2 = lineCoords[i + 1];
-        
-        const dx = p2[1] - p1[1]; // longitude difference
-        const dy = p2[0] - p1[0]; // latitude difference
-        
-        if (dx === 0 && dy === 0) continue;
-        
-        const bx = buildingCoord[1] - p1[1];
-        const by = buildingCoord[0] - p1[0];
-        
-        let t = (bx * dx + by * dy) / (dx * dx + dy * dy);
-        t = Math.max(0, Math.min(1, t));
-        
-        const footX = p1[1] + t * dx;
-        const footY = p1[0] + t * dy;
-        
-        const dist = Math.sqrt(
-          Math.pow(buildingCoord[1] - footX, 2) + 
-          Math.pow(buildingCoord[0] - footY, 2)
-        );
-        
-        if (dist < minDist) {
-          minDist = dist;
-          footPoint = [footY, footX]; // [lat, lon]
+      // For first and last stops, use first and last coordinates directly
+      let pos;
+      if (isFirst) {
+        const coord = activeRoute.coordinates[0];
+        pos = [coord[1], coord[0]];
+      } else if (isLast) {
+        const coord = activeRoute.coordinates[activeRoute.coordinates.length - 1];
+        pos = [coord[1], coord[0]];
+      } else {
+        // For middle stops, find building and calculate perpendicular point on route
+        const buildingCenter = findBuildingCenter(stopName, datasets?.buildings);
+        if (buildingCenter) {
+          // buildingCenter is [lng, lat], find nearest point on path
+          const nearestPoint = findNearestPointOnPolyline(buildingCenter[0], buildingCenter[1], path);
+          if (nearestPoint) {
+            pos = nearestPoint;
+          } else {
+            // Fallback: use coordinate at proportional index
+            const coordIdx = Math.round(i * (activeRoute.coordinates.length - 1) / (totalStops - 1));
+            const coord = activeRoute.coordinates[coordIdx];
+            pos = [coord[1], coord[0]];
+          }
+        } else {
+          // Fallback: use coordinate at proportional index
+          const coordIdx = Math.round(i * (activeRoute.coordinates.length - 1) / (totalStops - 1));
+          const coord = activeRoute.coordinates[coordIdx];
+          pos = [coord[1], coord[0]];
         }
       }
       
-      return footPoint;
-    };
-    
-    // Find building coordinates for each stop
-    const getStopCoordinates = () => {
-      const stopCoords = [];
+      if (!pos) return;
       
-      activeRoute.stops.forEach(stopName => {
-        // Try to find building in datasets
-        let buildingCoord = null;
-        if (datasets && datasets.buildings) {
-          const feature = datasets.buildings.features.find(f => {
-            const name = f.properties?.name || f.properties?.displayName || '';
-            return name.includes(stopName) || stopName.includes(name);
-          });
-          
-          if (feature) {
-            // Get centroid of building
-            const coords = feature.geometry.coordinates[0];
-            if (coords && coords.length > 0) {
-              const avgLon = coords.reduce((sum, c) => sum + c[0], 0) / coords.length;
-              const avgLat = coords.reduce((sum, c) => sum + c[1], 0) / coords.length;
-              buildingCoord = [avgLat, avgLon];
-            }
-          }
-        }
-        
-        if (buildingCoord) {
-          const foot = findFootOfPerpendicular(buildingCoord, activeRoute.coordinates);
-          stopCoords.push(foot || activeRoute.coordinates[0]);
-        } else {
-          // If building not found, use first coordinate
-          stopCoords.push(activeRoute.coordinates[0]);
-        }
-      });
-      
-      return stopCoords;
-    };
-    
-    const stopCoords = getStopCoordinates();
-    
-    stopCoords.forEach((coord, i) => {
-      if (!coord) return;
-      
-      const pos = [coord[1], coord[0]];
-      const isFirst = i === 0;
-      const isLast = i === activeRoute.stops.length - 1;
       const markerSize = isFirst || isLast ? 32 : 26;
       const borderWidth = isFirst || isLast ? 4 : 3;
       
@@ -768,7 +772,6 @@ export default function MapContainer({ datasets, buildings, selectedBuilding, se
         zIndex: isFirst || isLast ? 170 : 165
       });
 
-      const stopName = activeRoute.stops[i];
       marker.on('mouseover', () => {
         infoWindowRef.current.setContent(`<div class="campus-tooltip">${stopName}</div>`);
         infoWindowRef.current.open(map, pos);
@@ -784,7 +787,7 @@ export default function MapContainer({ datasets, buildings, selectedBuilding, se
 
     routeOverlaysRef.current = newRouteOverlays;
 
-  }, [activeRoute, amapLoaded]);
+  }, [activeRoute, amapLoaded, datasets]);
 
   // 5. Handle focusName (Fly to selected building)
   useEffect(() => {
