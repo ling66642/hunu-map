@@ -654,43 +654,87 @@ export default function MapContainer({ datasets, buildings, selectedBuilding, se
       newRouteOverlays.push(arrowMarker);
     }
 
-    // Route Stop Markers - create markers for each stop along the route
-    const totalCoords = activeRoute.coordinates.length;
-    const totalStops = activeRoute.stops.length;
-    
-    // Calculate positions for each stop (on line segments, not at turning points)
-    const stopPositions = [];
-    if (totalStops > 0) {
-      // First stop is always at the beginning
-      stopPositions.push(activeRoute.coordinates[0]);
+    // Helper function to find foot of perpendicular from building to line
+    const findFootOfPerpendicular = (buildingCoord, lineCoords) => {
+      let minDist = Infinity;
+      let footPoint = null;
       
-      // Middle stops are placed at midpoints of line segments
-      for (let i = 1; i < totalStops - 1; i++) {
-        // Calculate segment index for this stop
-        const segmentIndex = Math.floor(i * (totalCoords - 1) / (totalStops - 1));
-        const nextIndex = Math.min(segmentIndex + 1, totalCoords - 1);
+      for (let i = 0; i < lineCoords.length - 1; i++) {
+        const p1 = lineCoords[i];
+        const p2 = lineCoords[i + 1];
         
-        // Get midpoint of this segment
-        const p1 = activeRoute.coordinates[segmentIndex];
-        const p2 = activeRoute.coordinates[nextIndex];
-        const midLat = (p1[0] + p2[0]) / 2;
-        const midLon = (p1[1] + p2[1]) / 2;
+        const dx = p2[1] - p1[1]; // longitude difference
+        const dy = p2[0] - p1[0]; // latitude difference
         
-        stopPositions.push([midLat, midLon]);
+        if (dx === 0 && dy === 0) continue;
+        
+        const bx = buildingCoord[1] - p1[1];
+        const by = buildingCoord[0] - p1[0];
+        
+        let t = (bx * dx + by * dy) / (dx * dx + dy * dy);
+        t = Math.max(0, Math.min(1, t));
+        
+        const footX = p1[1] + t * dx;
+        const footY = p1[0] + t * dy;
+        
+        const dist = Math.sqrt(
+          Math.pow(buildingCoord[1] - footX, 2) + 
+          Math.pow(buildingCoord[0] - footY, 2)
+        );
+        
+        if (dist < minDist) {
+          minDist = dist;
+          footPoint = [footY, footX]; // [lat, lon]
+        }
       }
       
-      // Last stop is always at the end
-      if (totalStops > 1) {
-        stopPositions.push(activeRoute.coordinates[totalCoords - 1]);
-      }
-    }
+      return footPoint;
+    };
     
-    stopPositions.forEach((coord, i) => {
+    // Find building coordinates for each stop
+    const getStopCoordinates = () => {
+      const stopCoords = [];
+      
+      activeRoute.stops.forEach(stopName => {
+        // Try to find building in datasets
+        let buildingCoord = null;
+        if (datasets && datasets.buildings) {
+          const feature = datasets.buildings.features.find(f => {
+            const name = f.properties?.name || f.properties?.displayName || '';
+            return name.includes(stopName) || stopName.includes(name);
+          });
+          
+          if (feature) {
+            // Get centroid of building
+            const coords = feature.geometry.coordinates[0];
+            if (coords && coords.length > 0) {
+              const avgLon = coords.reduce((sum, c) => sum + c[0], 0) / coords.length;
+              const avgLat = coords.reduce((sum, c) => sum + c[1], 0) / coords.length;
+              buildingCoord = [avgLat, avgLon];
+            }
+          }
+        }
+        
+        if (buildingCoord) {
+          const foot = findFootOfPerpendicular(buildingCoord, activeRoute.coordinates);
+          stopCoords.push(foot || activeRoute.coordinates[0]);
+        } else {
+          // If building not found, use first coordinate
+          stopCoords.push(activeRoute.coordinates[0]);
+        }
+      });
+      
+      return stopCoords;
+    };
+    
+    const stopCoords = getStopCoordinates();
+    
+    stopCoords.forEach((coord, i) => {
       if (!coord) return;
       
       const pos = [coord[1], coord[0]];
       const isFirst = i === 0;
-      const isLast = i === totalStops - 1;
+      const isLast = i === activeRoute.stops.length - 1;
       const markerSize = isFirst || isLast ? 32 : 26;
       const borderWidth = isFirst || isLast ? 4 : 3;
       
