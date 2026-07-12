@@ -655,18 +655,10 @@ export default function MapContainer({ datasets, buildings, selectedBuilding, se
     }
 
     // Route Stops Markers (enhanced style)
-    // Only show markers for stops that have names (stops array), plus first and last points
     activeRoute.coordinates.forEach((coord, index) => {
       const pos = [coord[1], coord[0]];
       const isFirst = index === 0;
       const isLast = index === activeRoute.coordinates.length - 1;
-      const stopIndex = isFirst ? 0 : isLast ? activeRoute.stops.length - 1 : null;
-      
-      // Skip points that don't have corresponding stop names (unless first/last)
-      if (!isFirst && !isLast && index >= activeRoute.stops.length) {
-        return;
-      }
-      
       const markerSize = isFirst || isLast ? 32 : 26;
       const borderWidth = isFirst || isLast ? 4 : 3;
       
@@ -701,8 +693,7 @@ export default function MapContainer({ datasets, buildings, selectedBuilding, se
       });
 
       marker.on('mouseover', () => {
-        const stopName = isFirst ? activeRoute.stops[0] : isLast ? activeRoute.stops[activeRoute.stops.length - 1] : activeRoute.stops[index];
-        infoWindowRef.current.setContent(`<div class="campus-tooltip">${stopName}</div>`);
+        infoWindowRef.current.setContent(`<div class="campus-tooltip">${activeRoute.stops[index]}</div>`);
         infoWindowRef.current.open(map, pos);
       });
 
