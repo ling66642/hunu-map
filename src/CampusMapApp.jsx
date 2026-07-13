@@ -157,16 +157,10 @@ export default function CampusMapApp(){
     return categoryMatch&&searchMatch;
   })||[],[datasets,category,query]);
 
-  // 选中推荐路线后，地图仅绘制该路线途经点对应的建筑。
-  // 此处使用完整建筑数据匹配，避免侧栏的分类或搜索条件误隐藏途经建筑。
+  // 选中推荐路线后，地图显示全部建筑：途经建筑以3D白模展示，其余建筑以2D平面展示。
   const mapBuildings=useMemo(()=>{
     if (route.id==='none') return buildings;
-
-    const stops=route.stops.map(stop=>stop.trim()).filter(Boolean);
-    return datasets?.buildings.features.filter(feature=>{
-      const name=(feature.properties?.displayName||'').trim();
-      return name&&stops.some(stop=>name.includes(stop)||stop.includes(name));
-    })||[];
+    return datasets?.buildings.features||[];
   },[datasets,buildings,route]);
 
   const showRouteStop=useCallback((stop)=>{

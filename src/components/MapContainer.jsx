@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from 'react';
+﻿import React, { useEffect, useRef, useState } from 'react';
 import * as THREE from 'three';
 import { OBJLoader } from 'three/examples/jsm/loaders/OBJLoader.js';
 import { MTLLoader } from 'three/examples/jsm/loaders/MTLLoader.js';
@@ -160,10 +160,33 @@ function setModelBuildingVisibility(modelRoot, allowedBuildingIds) {
   modelRoot.traverse((child) => {
     if (!child.isMesh) return;
 
-    const modelBuildingId = child.name.match(/^building_\d+_(\d+)_part_/)?.[1];
+    const modelBuildingId = child.name.match(/^building_(\d+)_/)?.[1];
     child.visible = allowedBuildingIds === null || (
       modelBuildingId && allowedBuildingIds.has(modelBuildingId)
     );
+  });
+}
+
+// Check if a building feature is a route stop (name contains the stop keyword)
+function isRouteStopBuilding(feature, activeRoute) {
+  if (!activeRoute || !activeRoute.stops) return false;
+  const name = feature.properties?.displayName || '';
+  if (!name || name === '校园建筑') return false;
+  return activeRoute.stops.some(stop => name.includes(stop));
+}
+
+// Apply route colors to 3D model meshes based on building feature indices
+// buildingIndexToColor: Map<string, number> | null  (null = all white)
+function applyModelColors(modelRoot, buildingIndexToColor) {
+  if (!modelRoot) return;
+  modelRoot.traverse((child) => {
+    if (!child.isMesh) return;
+    const modelFeatureNo = child.name.match(/^building_(\d+)_/)?.[1];
+    if (buildingIndexToColor && modelFeatureNo && buildingIndexToColor.has(modelFeatureNo)) {
+      child.material.color.setHex(buildingIndexToColor.get(modelFeatureNo));
+    } else {
+      child.material.color.setHex(0xffffff);
+    }
   });
 }
 
@@ -187,16 +210,30 @@ export default function MapContainer({ datasets, buildings, selectedBuilding, se
   const glCustomLayerRef = useRef(null);
   const modelRootRef = useRef(null);
   const visibleModelBuildingIdsRef = useRef(null);
+  const modelColorMapRef = useRef(null);
+  const activeRouteRef = useRef(activeRoute);
 
   // Sync is3D ref
   useEffect(() => {
     is3DRef.current = is3D;
   }, [is3D]);
 
+  // Sync activeRoute ref
+  useEffect(() => {
+    activeRouteRef.current = activeRoute;
+  }, [activeRoute]);
+
   // Sync mapStyle ref
   useEffect(() => {
     mapStyleRef.current = mapStyle;
   }, [mapStyle]);
+
+  // When a route is active, force 3D mode
+  useEffect(() => {
+    if (activeRoute) {
+      setIs3D(true);
+    }
+  }, [activeRoute]);
 
   // 1. Load AMap Script
   useEffect(() => {
@@ -265,6 +302,7 @@ export default function MapContainer({ datasets, buildings, selectedBuilding, se
 
     // Sync is3D state if map pitch is changed manually by user (e.g. Right click + drag)
     map.on('pitch', () => {
+      if (activeRouteRef.current) return; // Don't toggle is3D when route is active
       const currentPitch = map.getPitch();
       setIs3D(currentPitch > 15);
     });
@@ -356,10 +394,10 @@ export default function MapContainer({ datasets, buildings, selectedBuilding, se
             object.rotation.z = -0.918 * Math.PI / 180;
             object.position.set(-4.5, 2.0, 0);
             
-            // Force every submesh to use the solid white material and add crisp outlines
+            // Force every submesh to use its own cloned material (so we can color individually) and add crisp outlines
             object.traverse((child) => {
               if (child.isMesh) {
-                child.material = whiteMaterial;
+                child.material = whiteMaterial.clone();
                 child.castShadow = false;
                 child.receiveShadow = false;
                 
@@ -372,6 +410,8 @@ export default function MapContainer({ datasets, buildings, selectedBuilding, se
             
             modelRootRef.current = object;
             setModelBuildingVisibility(object, visibleModelBuildingIdsRef.current);
+            // Apply stored colors (in case route was selected before model loaded)
+            applyModelColors(object, modelColorMapRef.current);
             scene.add(object);
             map.render();
           });
@@ -413,19 +453,38 @@ export default function MapContainer({ datasets, buildings, selectedBuilding, se
     };
   }, [amapLoaded, datasets]);
 
-  // 推荐路线激活时，3D 白模仅保留途经点对应的建筑。
+  // 推荐路线激活时，3D 模型仅保留途经点对应的建筑，并按路线色着色。
+  // 使用建筑在数组中的位置索引（feature_no = index + 1）匹配 OBJ 模型 mesh。
   useEffect(() => {
-    const allowedBuildingIds = activeRoute
-      ? new Set(buildings
-        .map(feature => feature.properties?.id)
-        .filter(id => id !== undefined && id !== null)
-        .map(String))
-      : null;
+    if (!activeRoute) {
+      visibleModelBuildingIdsRef.current = null;
+      modelColorMapRef.current = null;
+      setModelBuildingVisibility(modelRootRef.current, null);
+      applyModelColors(modelRootRef.current, null);
+    } else {
+      const allFeatures = datasets?.buildings.features || [];
 
-    visibleModelBuildingIdsRef.current = allowedBuildingIds;
-    setModelBuildingVisibility(modelRootRef.current, allowedBuildingIds);
+      // Find route stop indices (1-based, matching OBJ feature_no)
+      const routeStopFeatureNos = new Set();
+      const routeColorHex = parseInt(activeRoute.color.replace('#', ''), 16);
+      const buildingIndexToColor = new Map();
+
+      allFeatures.forEach((feature, index) => {
+        if (isRouteStopBuilding(feature, activeRoute)) {
+          const featureNo = String(index + 1);
+          routeStopFeatureNos.add(featureNo);
+          buildingIndexToColor.set(featureNo, routeColorHex);
+        }
+      });
+
+      visibleModelBuildingIdsRef.current = routeStopFeatureNos;
+      modelColorMapRef.current = buildingIndexToColor;
+
+      setModelBuildingVisibility(modelRootRef.current, routeStopFeatureNos);
+      applyModelColors(modelRootRef.current, buildingIndexToColor);
+    }
     mapRef.current?.render();
-  }, [activeRoute, buildings]);
+  }, [activeRoute, datasets]);
 
   // 3. Render Buildings and Labels (runs when buildings list or selection/style changes)
   useEffect(() => {
@@ -451,6 +510,39 @@ export default function MapContainer({ datasets, buildings, selectedBuilding, se
       const cat = feature.properties?.category;
       const baseColor = categoryColors[cat] || '#c8c5b8';
       const isField = feature.properties?.name?.includes('田径场');
+
+      // Mixed mode: when a route is active, route stops are 3D, others are 2D
+      if (activeRoute) {
+        const isRouteStop = isRouteStopBuilding(feature, activeRoute);
+        if (isRouteStop) {
+          // Route stop buildings: 3D style (white model visible, transparent fill)
+          if (isField) {
+            return {
+              strokeColor: isSelected ? '#1e6258' : '#fffdf6',
+              strokeWeight: isSelected ? 2 : 1.2,
+              fillColor: isSelected ? '#1e6258' : '#e28b75',
+              fillOpacity: 0.8,
+              height: 0
+            };
+          }
+          return {
+            strokeColor: isSelected ? '#1e6258' : 'transparent',
+            strokeWeight: isSelected ? 2 : 1.2,
+            fillColor: isSelected ? '#1e6258' : 'transparent',
+            fillOpacity: isSelected ? 0.35 : 0.001,
+            height: 15
+          };
+        } else {
+          // Non-route buildings: 2D white flat style
+          return {
+            strokeColor: '#cbd5e1',
+            strokeWeight: isSelected ? 2 : 1.2,
+            fillColor: isSelected ? '#1e6258' : '#ffffff',
+            fillOpacity: 0.98,
+            height: 0
+          };
+        }
+      }
 
       if (is3DRef.current) {
         if (isField) {
@@ -494,11 +586,27 @@ export default function MapContainer({ datasets, buildings, selectedBuilding, se
       mouseover: (feature, overlay, e) => {
         const cat = feature.properties?.category;
         const isField = feature.properties?.name?.includes('田径场');
-        const hoverColor = mapStyleRef.current === 'white' ? '#1e6258' : (categoryColors[cat] || '#1e6258');
+        
+        // In route mode: non-route buildings use dark green hover (white mapStyle look)
+        let hoverColor;
+        let hoverOpacity;
+        if (activeRoute) {
+          const isRouteStop = isRouteStopBuilding(feature, activeRoute);
+          if (isRouteStop) {
+            hoverColor = activeRoute.color;
+            hoverOpacity = isField ? 0.9 : 0.4;
+          } else {
+            hoverColor = '#1e6258';
+            hoverOpacity = 0.95;
+          }
+        } else {
+          hoverColor = mapStyleRef.current === 'white' ? '#1e6258' : (categoryColors[cat] || '#1e6258');
+          hoverOpacity = is3DRef.current ? (isField ? 0.9 : 0.4) : 0.95;
+        }
         
         overlay.setOptions({
           fillColor: hoverColor,
-          fillOpacity: is3DRef.current ? (isField ? 0.9 : 0.4) : 0.95,
+          fillOpacity: hoverOpacity,
           strokeColor: hoverColor,
           strokeWeight: 2
         });
@@ -514,7 +622,34 @@ export default function MapContainer({ datasets, buildings, selectedBuilding, se
         const isSelected = selectedBuilding?.properties?.mapId === feature.properties?.mapId;
         const isField = feature.properties?.name?.includes('田径场');
         
-        if (is3DRef.current) {
+        // In route mode: route stops use 3D restore, non-route use 2D restore
+        if (activeRoute) {
+          const isRouteStop = isRouteStopBuilding(feature, activeRoute);
+          if (isRouteStop) {
+            if (isField) {
+              overlay.setOptions({
+                fillColor: isSelected ? '#1e6258' : '#e28b75',
+                fillOpacity: 0.8,
+                strokeColor: isSelected ? '#1e6258' : '#fffdf6',
+                strokeWeight: isSelected ? 2 : 1.2
+              });
+            } else {
+              overlay.setOptions({
+                fillColor: isSelected ? '#1e6258' : 'transparent',
+                fillOpacity: isSelected ? 0.35 : 0.001,
+                strokeColor: isSelected ? '#1e6258' : 'transparent',
+                strokeWeight: isSelected ? 2 : 1.2
+              });
+            }
+          } else {
+            overlay.setOptions({
+              fillColor: isSelected ? '#1e6258' : '#ffffff',
+              strokeColor: '#cbd5e1',
+              strokeWeight: isSelected ? 2 : 1.2,
+              fillOpacity: 0.98
+            });
+          }
+        } else if (is3DRef.current) {
           if (isField) {
             overlay.setOptions({
               fillColor: isSelected ? '#1e6258' : (mapStyleRef.current === 'white' ? '#f1f5f9' : '#e28b75'),
@@ -582,7 +717,7 @@ export default function MapContainer({ datasets, buildings, selectedBuilding, se
     });
     labelMarkersRef.current = newLabelMarkers;
 
-  }, [buildings, selectedBuilding, amapLoaded, setSelectedBuilding, mapStyle]);
+  }, [buildings, selectedBuilding, amapLoaded, setSelectedBuilding, mapStyle, activeRoute]);
 
   // Helper function: find nearest point on line segment to a point
   function findNearestPointOnSegment(px, py, ax, ay, bx, by) {
@@ -846,8 +981,11 @@ export default function MapContainer({ datasets, buildings, selectedBuilding, se
     const map = mapRef.current;
     if (!map || !amapLoaded) return;
 
+    // In route mode, always use 3D camera angle
+    const effectiveIs3D = is3D || !!activeRoute;
+
     // Update camera angle
-    if (is3D) {
+    if (effectiveIs3D) {
       map.setPitch(55);
       map.setRotation(15);
       glCustomLayerRef.current?.show();
@@ -868,7 +1006,29 @@ export default function MapContainer({ datasets, buildings, selectedBuilding, se
       let strokeColor;
       let fillOpacity;
       
-      if (is3D) {
+      if (activeRoute) {
+        // Mixed mode: route stops are 3D, others are 2D
+        const isRouteStop = isRouteStopBuilding(feature, activeRoute);
+        if (isRouteStop) {
+          if (isField) {
+            height = 0;
+            fillColor = isSelected ? '#1e6258' : '#e28b75';
+            fillOpacity = 0.8;
+            strokeColor = isSelected ? '#1e6258' : '#fffdf6';
+          } else {
+            height = 15;
+            fillColor = isSelected ? '#1e6258' : 'transparent';
+            fillOpacity = isSelected ? 0.35 : 0.001;
+            strokeColor = isSelected ? '#1e6258' : 'transparent';
+          }
+        } else {
+          // Non-route buildings: 2D white flat
+          height = 0;
+          fillOpacity = 0.98;
+          fillColor = isSelected ? '#1e6258' : '#ffffff';
+          strokeColor = '#cbd5e1';
+        }
+      } else if (is3D) {
         if (isField) {
           height = 0;
           fillColor = isSelected ? '#1e6258' : (mapStyle === 'white' ? '#f1f5f9' : '#e28b75');
@@ -900,7 +1060,7 @@ export default function MapContainer({ datasets, buildings, selectedBuilding, se
         fillOpacity: fillOpacity
       });
     });
-  }, [is3D, mapStyle, selectedBuilding, amapLoaded]);
+  }, [is3D, mapStyle, selectedBuilding, amapLoaded, activeRoute]);
 
   // Custom Zoom Handlers
   const handleZoomIn = () => {
@@ -932,20 +1092,22 @@ export default function MapContainer({ datasets, buildings, selectedBuilding, se
             <button onClick={handleZoomOut} aria-label="缩小">−</button>
           </div>
           
-          <div className="map-view-switch">
-            <button 
-              className={!is3D ? 'active' : ''} 
-              onClick={() => setIs3D(false)}
-            >
-              2D
-            </button>
-            <button 
-              className={is3D ? 'active' : ''} 
-              onClick={() => setIs3D(true)}
-            >
-              3D
-            </button>
-          </div>
+          {!activeRoute && (
+            <div className="map-view-switch">
+              <button 
+                className={!is3D ? 'active' : ''} 
+                onClick={() => setIs3D(false)}
+              >
+                2D
+              </button>
+              <button 
+                className={is3D ? 'active' : ''} 
+                onClick={() => setIs3D(true)}
+              >
+                3D
+              </button>
+            </div>
+          )}
 
           <div className="map-style-switch">
             <button 
