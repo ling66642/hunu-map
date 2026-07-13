@@ -293,3 +293,40 @@
   .route-photo-heading h2 { font-size: 21px; }
   .route-photo-description { line-height: 1.65; }
 }
+
+/* 顶部地图模式切换 */
+.map-view-switch {
+  display: inline-flex;
+  align-items: center;
+  padding: 3px;
+  margin-right: 18px;
+  border: 1px solid #d8dfda;
+  border-radius: 9px;
+  background: #f1f4f0;
+}
+.map-view-switch a {
+  height: 32px;
+  min-width: 94px;
+  padding: 0 12px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  border-radius: 6px;
+  color: #71807a;
+  text-decoration: none;
+  font-size: 10px;
+  font-weight: 600;
+  transition: .2s ease;
+}
+.map-view-switch a:hover { color: var(--green); }
+.map-view-switch a.active { background: var(--green); color: #fff; box-shadow: 0 3px 10px rgba(23,76,69,.2); }
+@media(max-width: 980px) {
+  .map-top-title { display: none; }
+  .map-view-switch { margin-left: auto; }
+}
+@media(max-width: 760px) {
+  .map-view-switch { margin-right: 8px; }
+  .map-view-switch a { min-width: 40px; padding: 0 9px; font-size: 0; }
+  .map-view-switch a svg { width: 16px; height: 16px; }
+}
