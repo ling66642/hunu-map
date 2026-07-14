@@ -476,11 +476,11 @@ const StaticRouteMap = forwardRef(function StaticRouteMap({ datasets, modelReady
     ? [route.description.slice(0, 27), route.description.slice(27)]
     : [route.description];
 
-  // 路线A 途经点5(文渊楼)与6(经纬楼)之间路段在地图上的投影中点，作为实景照片引线的落点（落在路线线上，而非浮空）。
+  // 路线A 途经点6(经纬楼)与终点之间路段在地图上的投影中点，作为实景照片引线的落点（落在路线线上，而非浮空）。
   const photoRoutePoint = useMemo(() => {
     if (route.id !== 'routeA') return null;
-    const a = project(route.coordinates[4]);
-    const b = project(route.coordinates[5]);
+    const a = project(route.coordinates[5]);
+    const b = project(route.coordinates[6]);
     return [(a[0] + b[0]) / 2, (a[1] + b[1]) / 2];
   }, [route, project]);
 
@@ -614,13 +614,13 @@ const StaticRouteMap = forwardRef(function StaticRouteMap({ datasets, modelReady
 
       {route.id !== 'none' && <RouteEndpoints route={route} project={project} />}
 
-      {/* 校园实景插图：路线A 途经点5(文渊楼)与6(经纬楼)之间的法桐大道秋景
-          引线落在5-6之间的路线线上（photoRoutePoint），不再使用浮空圆点标记 */}
+      {/* 校园实景插图：路线A 途经点6(经纬楼)与终点之间的法桐大道秋景
+          引线落在6-终点之间的路线线上（photoRoutePoint），不再使用浮空圆点标记 */}
       {photoRoutePoint && (
         <g filter="url(#softShadow)">
-          {/* 引线：自路线A 5-6 路段指向法桐大道实景图 */}
+          {/* 引线：自路线A 途经点6与终点之间路段指向法桐大道实景图 */}
           <polyline
-            points={`${photoRoutePoint[0]},${photoRoutePoint[1]} ${photoRoutePoint[0]},395 760,360`}
+            points={`${photoRoutePoint[0]},${photoRoutePoint[1]} ${photoRoutePoint[0]},${photoRoutePoint[1] - 45} 760,360`}
             fill="none"
             stroke={route.color}
             strokeWidth="2"
