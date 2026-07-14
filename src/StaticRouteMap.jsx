@@ -557,6 +557,19 @@ const StaticRouteMap = forwardRef(function StaticRouteMap({ datasets, modelReady
       </g>
 
       <g clipPath="url(#campusClip)">
+        {/* 校园风景底图：路线A 5-6 之间的法桐大道林荫路照片，作为半透明背景叠加在校园地图上。 */}
+        <image
+          href="/images/road_bg.jpg"
+          x={MAP_BOX.x}
+          y={MAP_BOX.y}
+          width={MAP_BOX.width}
+          height={MAP_BOX.height}
+          preserveAspectRatio="xMidYMid slice"
+          opacity="0.32"
+        />
+      </g>
+
+      <g clipPath="url(#campusClip)">
         <g className="water-layer">
           {water.features.map((feature, index) => <path key={index} d={geometryPath(feature.geometry, project)} fill="#b9d8d6" stroke="#99c5c3" strokeWidth="1.5" fillRule="evenodd" />)}
         </g>
