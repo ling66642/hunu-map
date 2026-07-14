@@ -638,7 +638,7 @@ const StaticRouteMap = forwardRef(function StaticRouteMap({ datasets, modelReady
         </g>
       </g>
 
-      <g transform="translate(650 120)">
+      <g transform="translate(1150 280)">
         <circle cx="38" cy="38" r="35" fill="#f8f4e9" stroke="#d1c7b2" />
         <path d="M38 9 L47 42 L38 36 L29 42 Z" fill="#174b45" />
         <text x="38" y="61" textAnchor="middle" fontSize="12" fontWeight="800" fill="#174b45">N</text>
