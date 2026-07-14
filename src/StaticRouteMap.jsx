@@ -476,6 +476,14 @@ const StaticRouteMap = forwardRef(function StaticRouteMap({ datasets, modelReady
     ? [route.description.slice(0, 27), route.description.slice(27)]
     : [route.description];
 
+  // 路线A 途经点5(文渊楼)与6(经纬楼)之间路段在地图上的投影中点，作为实景照片引线的落点（落在路线线上，而非浮空）。
+  const photoRoutePoint = useMemo(() => {
+    if (route.id !== 'routeA') return null;
+    const a = project(route.coordinates[4]);
+    const b = project(route.coordinates[5]);
+    return [(a[0] + b[0]) / 2, (a[1] + b[1]) / 2];
+  }, [route, project]);
+
   return (
     <svg
       ref={ref}
@@ -607,19 +615,27 @@ const StaticRouteMap = forwardRef(function StaticRouteMap({ datasets, modelReady
       {route.id !== 'none' && <RouteEndpoints route={route} project={project} />}
 
       {/* 校园实景插图：路线A 途经点5(文渊楼)与6(经纬楼)之间的法桐大道秋景
-          图片放在5-6之间路旁偏右上方，引线指向路上中点(642,454) */}
-      <g filter="url(#softShadow)">
-        {/* 引线：从图片左下角指向5-6之间的路上 */}
-        <polyline points="760,400 700,430 642,454" fill="none" stroke={route.id === 'routeA' ? route.color : '#8b9388'} strokeWidth="2" strokeDasharray="4 3" opacity="0.7" />
-        <circle cx="642" cy="454" r="4" fill={route.id === 'routeA' ? route.color : '#8b9388'} opacity="0.8" />
-        {/* 图片卡片 */}
-        <g transform="translate(760 280)">
-          <rect width="160" height="130" rx="7" fill="#fffdf7" stroke="#d8d0bf" strokeWidth="1.5" />
-          <image href="/images/road_bg.jpg" x="5" y="5" width="150" height="95" preserveAspectRatio="xMidYMid slice" clipPath="url(#photoClip)" />
-          <rect x="5" y="100" width="150" height="25" rx="0" fill="#f8f4e9" />
-          <text x="80" y="117" textAnchor="middle" className="map-note" style={{ fontSize: '10px', letterSpacing: '0.5px' }}>法桐大道（途经点 5—6）</text>
+          引线落在5-6之间的路线线上（photoRoutePoint），不再使用浮空圆点标记 */}
+      {photoRoutePoint && (
+        <g filter="url(#softShadow)">
+          {/* 引线：自路线A 5-6 路段指向法桐大道实景图 */}
+          <polyline
+            points={`${photoRoutePoint[0]},${photoRoutePoint[1]} ${photoRoutePoint[0]},395 760,360`}
+            fill="none"
+            stroke={route.color}
+            strokeWidth="2"
+            strokeDasharray="4 3"
+            opacity="0.8"
+          />
+          {/* 图片卡片 */}
+          <g transform="translate(760 280)">
+            <rect width="160" height="130" rx="7" fill="#fffdf7" stroke="#d8d0bf" strokeWidth="1.5" />
+            <image href="/images/road_bg.jpg" x="5" y="5" width="150" height="95" preserveAspectRatio="xMidYMid slice" clipPath="url(#photoClip)" />
+            <rect x="5" y="100" width="150" height="25" rx="0" fill="#f8f4e9" />
+            <text x="80" y="117" textAnchor="middle" className="map-note" style={{ fontSize: '10px', letterSpacing: '0.5px' }}>法桐大道（途经点 5—6）</text>
+          </g>
         </g>
-      </g>
+      )}
 
       <g transform="translate(338 966)">
         <rect width={route.id === 'none' ? 650 : 750} height="43" rx="7" fill="#f8f4e9" stroke="#d7cfbe" />
