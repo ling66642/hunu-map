@@ -477,10 +477,11 @@ const StaticRouteMap = forwardRef(function StaticRouteMap({ datasets, modelReady
     : [route.description];
 
   // 路线A 途经点6(经纬楼)与终点之间路段在地图上的投影中点，作为实景照片引线的落点（落在路线线上，而非浮空）。
+  // 注意：route.coordinates 格式为 [lat, lng]，而 project() 期望 [lng, lat]，必须交换。
   const photoRoutePoint = useMemo(() => {
     if (route.id !== 'routeA') return null;
-    const a = project(route.coordinates[5]);
-    const b = project(route.coordinates[6]);
+    const a = project([route.coordinates[5][1], route.coordinates[5][0]]);
+    const b = project([route.coordinates[6][1], route.coordinates[6][0]]);
     return [(a[0] + b[0]) / 2, (a[1] + b[1]) / 2];
   }, [route, project]);
 
