@@ -100,7 +100,9 @@ function classify(name='') {
 function cleanName(name) {
   if (!name || name === 'None') return '校园建筑';
   const match = name.match(/[（(]\s*([^()（）]*[\u4e00-\u9fa5][^()（）]*)\s*[)）]/);
-  return match ? match[1].trim() : name.replace(/^Hunan Normal University'?s?\s*/i,'').trim();
+  const result = match ? match[1].trim() : name.replace(/^Hunan Normal University'?s?\s*/i,'').trim();
+  const remap = { '高师楼': '中和楼' };
+  return remap[result] || result;
 }
 
 export default function CampusMapApp(){

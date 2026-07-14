@@ -1,5 +1,4 @@
 import React, { forwardRef, useMemo } from 'react';
-import { stopDescriptions } from './data/routes';
 import RouteModelLayer from './RouteModelLayer';
 
 const SVG_WIDTH = 1600;
@@ -17,13 +16,51 @@ const categoryPalette = {
   service: { roof: '#c9c6ba', side: '#969388' },
 };
 
+// 静态地图中途经点显示名覆盖（仅影响标签展示，不影响建筑匹配 / 3D 模型 / 坐标）。
+// 交互地图保持不变，仍显示“研五舍”。
+const STATIC_ROUTE_STOP_DISPLAY = {
+  '研五舍': '木兰楼',
+};
+
+// 静态地图中路线名称覆盖（仅影响标签展示，交互地图仍显示“路线A”等）。
+const STATIC_ROUTE_LABEL = {
+  routeA: '校园漫步路线A',
+  routeB: '校园漫步路线B',
+  routeC: '校园漫步路线C',
+  routeD: '校园漫步路线D',
+  routeE: '校园漫步路线E',
+};
+
+// 静态地图中各途经点的建筑介绍（取自《建筑介绍.docx》）。
+// 键名使用 routes.js 中的原途经点名（originalName）：
+//   - 「中和楼」途经点按用户确认采用文档中的“中和楼（天文台）”段落；
+//   - 「江湾体育场」采用文档中的“江湾体育馆”段落。
+// 文档中无对应条目的途经点（研究生院、教务处、体育场1、江边三舍、研五舍等）不显示介绍。
+const buildingIntroductions = {
+  '逸夫图书馆': '湖南师范大学图书馆的前身是1938年建立的国立师范学院图书馆。现在的逸夫图书馆于1991年11月落成，由邵逸夫先生捐资500万港币兴建，这是当时湖南高校中面积最大、设施最全的图书馆，也是邵逸夫先生在湖南捐建的首个教育项目。图书馆在2004年和2014年经历了两次扩建，并在2024年荣获“全国古籍重点保护单位”称号。截至2020年底，其纸质馆藏达415.8万册，订购各类文献数据库115个。',
+  '文渊楼': '文渊楼是文学院与历史文化学院的所在地。该建筑红墙黛瓦，古木掩映，富有幽静的诗意。其入口处有一副由校友、湖湘诗词名家吴容甫撰联、书法名家胡昌华挥毫的黑花岗岩底鎏金楹联。文学院底蕴深厚，其前身可追溯至国立师范学院的国文系。',
+  '经纬楼': '经纬楼是地理科学学院的教学楼。该学院源于1938年的国立师范学院史地系。学院实力雄厚，其地理科学专业是继北京师范大学之后，全国第二家通过教育部师范类专业三级认证的专业；地理科学、人文地理与城乡规划、土地资源管理专业为国家级一流本科专业建设点。学院拥有地理学一级学科博士点和博士后科研流动站，地理学科是湖南省“十四五”重点学科，在教育部第五轮学科评估中位居全国前列，并建有2个湖南省重点实验室。',
+  '学生活动中心': '湖南师范大学学生活动中心位于江边的励德楼内，于2009年从木兰路搬迁至此。这里是校内最大的活动场地，为文艺比赛、培训讲堂、职场招聘、会议展览、晚会典礼等各类文娱活动提供场地和技术支持。自投入使用以来，已累计承办校内外千余场大小活动。',
+  '外国语学院': '外国语学院始建于1938年，位于腾龙楼。学院成就卓著：2007年，英语语言文学成为国家重点学科；2017年和2022年，外国语言文学两次入选国家“世界一流”建设学科，是湖南省属高校唯一进入国家“双一流”建设的学科；2018年，教师团队入选教育部首批“全国高校黄大年式教师团队”（全国外语类仅2个）；2019年，学院获“全国教育系统先进集体”（当年全国唯一获此殊荣的高校外国语学院）；2021年，英语系获“全国三八红旗集体”。',
+  '廉心公园': '廉心公园是湖南师范大学校园内一处精巧雅致的园林景观。公园虽面积不大，但设计有镂空景墙、圆拱门、木廊亭等元素，并悬挂有多副富含文化气息的楹联。它是师生课余休憩、感受校园文化氛围的理想场所，也是学校开展清廉文化教育的重要阵地。',
+  '校史展览馆': '校史展览馆位于二里半校区里仁楼北侧2层。它始建于2008年，为迎接70周年校庆而建。2018年，在80周年校庆之际进行了重新扩建布展。展馆由“师范弦歌”、“鸿基初创”等九大展区组成，通过大量图片和实物，系统展示了学校从国立师范学院至今的发展历程。2024年，展馆因场地提质改造而闭馆施工。',
+  '理学院': '湖南师范大学理学院的历史可追溯到1938年国立师范学院的理化系。1996年，数学系和计算中心合并成立理学院。2002年，理学院分立，组建了数学与统计学院、物理与电子科学学院等。从这里走出了包括3名中国科学院院士、1名中国工程院院士以及20余位国家杰青和长江学者在内的大批杰出校友。',
+  '国际学术报告厅': '国际学术报告厅是学校举办高水平学术会议、国际交流及重要典礼的核心场所。公共管理学院等多个学院的毕业典礼暨学位授予仪式均在此举行。为确保设施设备的先进性与安全性，报告厅在2019年和2026年均进行过维修改造工程。',
+  '忠烈祠': '麓山忠烈祠位于湖南师范大学校内。其前身为纪念岳飞的岳王庙，于1939年改建为忠烈祠，以纪念在淞沪会战中牺牲的国民革命军第四路军将士。该祠于1997年被列为全国重点文物保护单位，并于2020年入选第三批国家级抗战纪念设施名录。祠内匾额“允武且仁”由近代书法家谭泽闿书丹。',
+  '景德楼': '景德楼是法学院、马克思主义学院和公共管理学院的所在地。这三个学院是学校哲学社会科学研究的重要力量。其中，法学院由原法学院与湖南政法管理干部学院于2002年合并组建而成。景德楼内定期举办各类高层次学术会议，如2025年在此举行了哲学学院成立仪式暨建构中国自主哲学知识体系研讨会',
+  '中和楼': '中和楼是湖南师范大学的标志性建筑之一，原名为天文台，始建于1991年。它位于老理化楼的中心楼顶位置，是学校的重要科研、教学和科普设施。2014年，由于发展需要，学校决定按照修旧如旧的原则拆除老理化楼重建，新的天文馆仍建在原址，建有40公分折反式天文望远镜和大型全可动式穹顶，按照长沙的地理纬度进行定位设计，可高精度自动跟踪观测月球、行星、太阳及其他恒星和星团、星云等天体，是目前中南地区规格最高，功能最强的天文馆。',
+  '江湾体育场': '江湾体育馆是湖南师范大学最新建成的大型现代化体育馆，于2024年5月竣工启用。该馆总建筑面积19,907.04平方米，主馆三层，设有活动看台3,932座、固定看台735座，中央场地可容纳2,000余人，主馆可同时容纳7,000余人。场馆集室内跑道、篮球场等多种功能于一体。启用后，已成功承办全国青少年三大球运动会等国家级赛事，以及学校毕业典礼、新年联欢会等大型活动。',
+};
+
 function cleanName(name) {
   if (!name || name === 'None') return '';
   const bracketName = name.match(/[（(]\s*([^()（）]*[\u4e00-\u9fa5][^()（）]*)\s*[)）]/);
-  return (bracketName ? bracketName[1] : name)
+  const result = (bracketName ? bracketName[1] : name)
     .replace(/^Hunan Normal University'?s?\s*/i, '')
     .replace(/^湖南师范大学/, '')
     .trim();
+  const remap = { '高师楼': '中和楼' };
+  return remap[result] || result;
 }
 
 function classify(name = '') {
@@ -138,7 +175,8 @@ function getStopAnchors(route, buildings, project) {
     const routeCoordinate = route.coordinates[fallbackIndex];
     const coordinate = building ? featureCenter(building) : routeCoordinate ? [routeCoordinate[1], routeCoordinate[0]] : null;
     return {
-      name,
+      name: STATIC_ROUTE_STOP_DISPLAY[name] || name, // 仅显示名覆盖为“木兰楼”
+      originalName: name, // 保留原名用于建筑匹配与描述查询
       index,
       coordinate,
       building,
@@ -147,6 +185,40 @@ function getStopAnchors(route, buildings, project) {
   });
 }
 
+const CALLOUT_CARD_W = 244;
+const CALLOUT_LEFT_X = 46;
+const CALLOUT_RIGHT_X = 1310;
+const CALLOUT_TEXT_X_OFFSET = 48;
+const CALLOUT_TEXT_MAX_W = 182;
+const CALLOUT_INTRO_LINE_H = 15.5;
+const CALLOUT_COL_TOP = 196;
+const CALLOUT_GAP = 16;
+
+// 按当前字号估算每行可容纳宽度，对建筑介绍做 SVG 手动换行。
+function wrapIntro(text, maxWidth) {
+  if (!text) return [];
+  const CJK = 12.74;
+  const ASCII = 6.5;
+  const lines = [];
+  let current = '';
+  let width = 0;
+  for (const ch of text) {
+    const charWidth = /[　-鿿＀-￯]/.test(ch) ? CJK : ASCII;
+    if (width + charWidth > maxWidth && current) {
+      lines.push(current);
+      current = ch;
+      width = charWidth;
+    } else {
+      current += ch;
+      width += charWidth;
+    }
+  }
+  if (current) lines.push(current);
+  return lines;
+}
+
+// 将引线下卡片按左右两栏非重叠堆叠：左栏放地图左半侧的途经点，右栏放右半侧，
+// 每栏从上到下依次排列，卡片高度随介绍行数动态变化，避免互相遮挡。
 function arrangeCallouts(anchors) {
   if (!anchors.length) return [];
   const orderedByX = [...anchors].sort((a, b) => a.point[0] - b.point[0]);
@@ -158,11 +230,14 @@ function arrangeCallouts(anchors) {
   };
   const positions = [];
   Object.entries(groups).forEach(([side, items]) => {
-    const minY = 286;
-    const maxY = 804;
-    items.forEach((item, order) => {
-      const y = items.length === 1 ? (minY + maxY) / 2 : minY + order * (maxY - minY) / (items.length - 1);
-      positions.push({ ...item, side, labelY: y });
+    let prevBottom = CALLOUT_COL_TOP - CALLOUT_GAP;
+    items.forEach((item) => {
+      const intro = buildingIntroductions[item.originalName] || '';
+      const lines = wrapIntro(intro, CALLOUT_TEXT_MAX_W);
+      const height = 44 + lines.length * CALLOUT_INTRO_LINE_H + 10;
+      const top = prevBottom + CALLOUT_GAP;
+      positions.push({ ...item, side, cardTop: top, cardHeight: height, centerY: top + height / 2 });
+      prevBottom = top + height;
     });
   });
   return positions;
@@ -301,9 +376,19 @@ function OverviewLabels({ features, project }) {
 
 function RouteEndpoints({ route, project }) {
   if (route.coordinates.length < 2) return null;
+  const mapCenterX = MAP_BOX.x + MAP_BOX.width / 2;
+  // 起点/终点文字根据途经点在地图中的左右位置，自动朝向地图内部（避开两侧的介绍卡片）。
   const endpoints = [
-    { key: 'start', label: '起点', short: '起', color: '#16835d', coordinate: route.coordinates[0], offsetX: 21, offsetY: -23, anchor: 'start' },
-    { key: 'end', label: '终点', short: '终', color: '#c43b36', coordinate: route.coordinates.at(-1), offsetX: -21, offsetY: 31, anchor: 'end' },
+    {
+      key: 'start', label: '起点', short: '起', color: '#16835d', coordinate: route.coordinates[0],
+      leftOffset: { offsetX: 21, offsetY: -23, anchor: 'start' },
+      rightOffset: { offsetX: -21, offsetY: -23, anchor: 'end' },
+    },
+    {
+      key: 'end', label: '终点', short: '终', color: '#c43b36', coordinate: route.coordinates.at(-1),
+      leftOffset: { offsetX: 21, offsetY: 31, anchor: 'start' },
+      rightOffset: { offsetX: -21, offsetY: 31, anchor: 'end' },
+    },
   ];
 
   return (
@@ -311,15 +396,17 @@ function RouteEndpoints({ route, project }) {
       {endpoints.map((endpoint) => {
         const [lat, lng] = endpoint.coordinate;
         const point = project([lng, lat]);
+        const onRight = point[0] >= mapCenterX;
+        const cfg = onRight ? endpoint.rightOffset : endpoint.leftOffset;
         return (
           <g key={endpoint.key} transform={`translate(${point[0]} ${point[1]})`}>
             <circle r="18" fill="#fffaf0" opacity="0.98" />
             <circle r="14" fill={endpoint.color} stroke="#fff" strokeWidth="2.2" />
             <text y="5" textAnchor="middle" className="endpoint-letter">{endpoint.short}</text>
             <text
-              x={endpoint.offsetX}
-              y={endpoint.offsetY}
-              textAnchor={endpoint.anchor}
+              x={cfg.offsetX}
+              y={cfg.offsetY}
+              textAnchor={cfg.anchor}
               className="endpoint-label"
             >
               {endpoint.label}
@@ -336,30 +423,32 @@ function RouteCallouts({ callouts, route }) {
     <g className="route-callouts">
       {callouts.map((item) => {
         const isLeft = item.side === 'left';
-        const cardX = isLeft ? 52 : 1318;
-        const cardWidth = 230;
-        const cardHeight = 70;
+        const cardX = isLeft ? CALLOUT_LEFT_X : CALLOUT_RIGHT_X;
+        const cardWidth = CALLOUT_CARD_W;
         const targetX = isLeft ? cardX + cardWidth : cardX;
         const elbowX = isLeft ? MAP_BOX.x - 9 : MAP_BOX.x + MAP_BOX.width + 9;
-        const numberX = isLeft ? cardX + 27 : cardX + 27;
-        const textX = cardX + 53;
-        const labelMidY = item.labelY + cardHeight / 2;
+        const numberX = cardX + 27;
+        const textX = cardX + CALLOUT_TEXT_X_OFFSET;
+        const intro = buildingIntroductions[item.originalName] || '';
+        const lines = wrapIntro(intro, CALLOUT_TEXT_MAX_W);
         return (
           <g key={item.name}>
             <polyline
-              points={`${item.point[0]},${item.point[1]} ${elbowX},${labelMidY} ${targetX},${labelMidY}`}
+              points={`${item.point[0]},${item.point[1]} ${elbowX},${item.centerY} ${targetX},${item.centerY}`}
               fill="none"
               stroke={route.color}
               strokeWidth="1.8"
               opacity="0.72"
             />
             <circle cx={item.point[0]} cy={item.point[1]} r="7" fill="#fffdf7" stroke={route.color} strokeWidth="3" />
-            <rect x={cardX} y={item.labelY} width={cardWidth} height={cardHeight} rx="8" fill="#fbf8ef" stroke="#d8d0bf" />
-            <rect x={cardX} y={item.labelY} width="5" height={cardHeight} rx="2.5" fill={route.color} />
-            <circle cx={numberX} cy={labelMidY} r="15" fill={route.color} />
-            <text x={numberX} y={labelMidY + 5} textAnchor="middle" className="callout-number">{item.index + 1}</text>
-            <text x={textX} y={item.labelY + 29} className="callout-name">{item.name}</text>
-            <text x={textX} y={item.labelY + 50} className="callout-desc">{stopDescriptions[item.name] || '校园特色节点'}</text>
+            <rect x={cardX} y={item.cardTop} width={cardWidth} height={item.cardHeight} rx="8" fill="#fbf8ef" stroke="#d8d0bf" />
+            <rect x={cardX} y={item.cardTop} width="5" height={item.cardHeight} rx="2.5" fill={route.color} />
+            <circle cx={numberX} cy={item.cardTop + 25} r="14" fill={route.color} />
+            <text x={numberX} y={item.cardTop + 30} textAnchor="middle" className="callout-number">{item.index + 1}</text>
+            <text x={textX} y={item.cardTop + 27} className="callout-name">{item.name}</text>
+            {lines.map((line, index) => (
+              <text key={index} x={textX} y={item.cardTop + 44 + index * CALLOUT_INTRO_LINE_H} className="callout-intro">{line}</text>
+            ))}
           </g>
         );
       })}
@@ -429,7 +518,7 @@ const StaticRouteMap = forwardRef(function StaticRouteMap({ datasets, modelReady
           .overview-labels .unnamed-building-label { font-size: 8.2px; font-weight: 600; fill: #8a7452; }
           .callout-number { font-size: 14px; font-weight: 800; fill: #fff; }
           .callout-name { font-family: "STSong", "SimSun", serif; font-size: 18px; font-weight: 700; fill: #24433d; }
-          .callout-desc { font-size: 11px; letter-spacing: 1px; fill: #7e887f; }
+          .callout-intro { font-family: "STKaiti", "KaiTi", "楷体", "Kaiti SC", sans-serif; font-size: 13px; letter-spacing: 0.4px; fill: #5a6b65; }
           .endpoint-letter { font-size: 12px; font-weight: 800; fill: #fff; }
           .endpoint-label { font-size: 13px; font-weight: 800; fill: #284a43; paint-order: stroke; stroke: #fffaf0; stroke-width: 4px; stroke-linejoin: round; }
           .route-model-layer { pointer-events: none; }
@@ -449,7 +538,7 @@ const StaticRouteMap = forwardRef(function StaticRouteMap({ datasets, modelReady
         <text x="44" y="59" textAnchor="middle" fontFamily="STKaiti, KaiTi, serif" fontSize="43" fontWeight="700" fill="#f4e4bd">师</text>
       </g>
       <text x="193" y="93" className="poster-kicker">湖南师范大学 · 二里半校区</text>
-      <text x="193" y="151" className="poster-title">{route.posterTitle}</text>
+      <text x="193" y="151" className="poster-title">{STATIC_ROUTE_LABEL[route.id] || route.posterTitle}</text>
       <text x="196" y="183" className="poster-subtitle">{route.subtitle}</text>
 
       <g transform="translate(1080 76)">
@@ -549,7 +638,7 @@ const StaticRouteMap = forwardRef(function StaticRouteMap({ datasets, modelReady
         </g>
       </g>
 
-      <g transform="translate(1392 875)">
+      <g transform="translate(1392 984)">
         <circle cx="38" cy="38" r="35" fill="#f8f4e9" stroke="#d1c7b2" />
         <path d="M38 9 L47 42 L38 36 L29 42 Z" fill="#174b45" />
         <text x="38" y="61" textAnchor="middle" fontSize="12" fontWeight="800" fill="#174b45">N</text>
