@@ -505,7 +505,7 @@ const StaticRouteMap = forwardRef(function StaticRouteMap({ datasets, modelReady
           <feGaussianBlur stdDeviation="6" />
         </filter>
         <clipPath id="campusClip"><path d={boundaryPath} /></clipPath>
-        <clipPath id="photoClip"><rect x="6" y="6" width="188" height="128" rx="4" /></clipPath>
+        <clipPath id="photoClip"><rect x="5" y="5" width="150" height="95" rx="4" /></clipPath>
         <marker id="routeArrow" markerWidth="9" markerHeight="9" refX="7.5" refY="4.5" orient="auto" markerUnits="userSpaceOnUse">
           <path d="M0.8,0.8 L8.2,4.5 L0.8,8.2 Z" fill={route.color} stroke="#fffaf3" strokeWidth="0.8" />
         </marker>
@@ -606,12 +606,19 @@ const StaticRouteMap = forwardRef(function StaticRouteMap({ datasets, modelReady
 
       {route.id !== 'none' && <RouteEndpoints route={route} project={project} />}
 
-      {/* 校园实景插图：路线A 5(文渊楼)与6(经纬楼)之间的法桐大道秋景 */}
-      <g transform="translate(1060 720)" filter="url(#softShadow)">
-        <rect width="200" height="168" rx="8" fill="#fffdf7" stroke="#d8d0bf" strokeWidth="1.5" />
-        <image href="/images/road_bg.jpg" x="6" y="6" width="188" height="128" preserveAspectRatio="xMidYMid slice" clipPath="url(#photoClip)" />
-        <rect x="6" y="134" width="188" height="28" rx="0" fill="#f8f4e9" />
-        <text x="100" y="152" textAnchor="middle" className="map-note" style={{ fontSize: '11px', letterSpacing: '1px' }}>法桐大道 · 文渊楼—经纬楼</text>
+      {/* 校园实景插图：路线A 途经点5(文渊楼)与6(经纬楼)之间的法桐大道秋景
+          图片放在5-6之间路旁偏右上方，引线指向路上中点(642,454) */}
+      <g filter="url(#softShadow)">
+        {/* 引线：从图片左下角指向5-6之间的路上 */}
+        <polyline points="760,400 700,430 642,454" fill="none" stroke={route.id === 'routeA' ? route.color : '#8b9388'} strokeWidth="2" strokeDasharray="4 3" opacity="0.7" />
+        <circle cx="642" cy="454" r="4" fill={route.id === 'routeA' ? route.color : '#8b9388'} opacity="0.8" />
+        {/* 图片卡片 */}
+        <g transform="translate(760 280)">
+          <rect width="160" height="130" rx="7" fill="#fffdf7" stroke="#d8d0bf" strokeWidth="1.5" />
+          <image href="/images/road_bg.jpg" x="5" y="5" width="150" height="95" preserveAspectRatio="xMidYMid slice" clipPath="url(#photoClip)" />
+          <rect x="5" y="100" width="150" height="25" rx="0" fill="#f8f4e9" />
+          <text x="80" y="117" textAnchor="middle" className="map-note" style={{ fontSize: '10px', letterSpacing: '0.5px' }}>法桐大道（途经点 5—6）</text>
+        </g>
       </g>
 
       <g transform="translate(338 966)">
