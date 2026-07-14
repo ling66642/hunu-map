@@ -26,11 +26,33 @@ function downloadBlob(blob, name) {
   setTimeout(() => URL.revokeObjectURL(url), 1000);
 }
 
-function serializeSvg(svgElement) {
+function blobToDataUrl(blob) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => {
+      if (typeof reader.result === 'string') resolve(reader.result);
+      else reject(new Error('图片资源转换失败'));
+    };
+    reader.onerror = () => reject(reader.error || new Error('图片资源读取失败'));
+    reader.readAsDataURL(blob);
+  });
+}
+
+async function serializeSvg(svgElement) {
   const clone = svgElement.cloneNode(true);
   clone.setAttribute('xmlns', 'http://www.w3.org/2000/svg');
   clone.setAttribute('width', '1600');
   clone.setAttribute('height', '1100');
+
+  const images = [...clone.querySelectorAll('image[href]')];
+  await Promise.all(images.map(async (image) => {
+    const href = image.getAttribute('href');
+    if (!href || href.startsWith('data:')) return;
+    const response = await fetch(new URL(href, window.location.href));
+    if (!response.ok) throw new Error(`图片资源加载失败（${response.status}）`);
+    image.setAttribute('href', await blobToDataUrl(await response.blob()));
+  }));
+
   return new XMLSerializer().serializeToString(clone);
 }
 
@@ -88,21 +110,27 @@ export default function PosterApp() {
     selectRoute(routes[nextIndex].id);
   };
 
-  const exportSvg = () => {
+  const exportSvg = async () => {
     if (!svgRef.current || !modelReady) return;
-    const source = serializeSvg(svgRef.current);
-    downloadBlob(new Blob([source], { type: 'image/svg+xml;charset=utf-8' }), fileName(activeRoute, 'svg'));
-    setNotice('SVG 版式文件已下载，三维模型以高清渲染层嵌入。');
+    setNotice('正在嵌入图片资源并生成 SVG…');
+    try {
+      const source = await serializeSvg(svgRef.current);
+      downloadBlob(new Blob([source], { type: 'image/svg+xml;charset=utf-8' }), fileName(activeRoute, 'svg'));
+      setNotice('SVG 版式文件已下载，背景图与三维模型均已嵌入。');
+    } catch (error) {
+      setNotice(`SVG 生成失败：${error.message || '未知错误'}。`);
+    }
   };
 
   const exportPng = async () => {
     if (!svgRef.current || !modelReady || exporting) return;
     setExporting(true);
     setNotice('正在生成高清 PNG…');
-    const source = serializeSvg(svgRef.current);
-    const blob = new Blob([source], { type: 'image/svg+xml;charset=utf-8' });
-    const url = URL.createObjectURL(blob);
+    let url = '';
     try {
+      const source = await serializeSvg(svgRef.current);
+      const blob = new Blob([source], { type: 'image/svg+xml;charset=utf-8' });
+      url = URL.createObjectURL(blob);
       const image = new Image();
       await new Promise((resolve, reject) => {
         image.onload = resolve;
@@ -123,7 +151,7 @@ export default function PosterApp() {
     } catch (error) {
       setNotice(`PNG 生成失败：${error.message || '未知错误'}。可先下载 SVG。`);
     } finally {
-      URL.revokeObjectURL(url);
+      if (url) URL.revokeObjectURL(url);
       setExporting(false);
     }
   };
@@ -132,7 +160,7 @@ export default function PosterApp() {
     <div className="poster-page">
       <header className="poster-toolbar">
         <a className="poster-brand" href="/">
-          <span className="poster-brand-seal">师</span>
+          <img src="/images/师大校徽.webp" alt="湖南师范大学校徽" className="poster-brand-seal" />
           <span><strong>湖南师范大学</strong><small>二里半校园导览</small></span>
         </a>
 

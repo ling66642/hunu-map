@@ -1,4 +1,4 @@
-﻿import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import * as THREE from 'three';
 import { OBJLoader } from 'three/examples/jsm/loaders/OBJLoader.js';
 import { MTLLoader } from 'three/examples/jsm/loaders/MTLLoader.js';
@@ -64,6 +64,25 @@ const categoryColors = {
   residence: '#aab6c3', 
   service: '#c8c5b8' 
 };
+
+function getCategoryIconSvg(category) {
+  const svgStyles = 'width="12px" height="12px" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="display: block;"';
+  switch (category) {
+    case 'teaching':
+      return `<svg xmlns="http://www.w3.org/2000/svg" ${svgStyles}><path d="M21.42 10.922a1 1 0 0 0-.019-1.838L12.83 5.18a2 2 0 0 0-1.66 0L2.6 9.08a1 1 0 0 0 0 1.832l8.57 3.908a2 2 0 0 0 1.66 0z"/><path d="M6 12v5c0 2 2 3 6 3s6-1 6-3v-5"/></svg>`;
+    case 'library':
+      return `<svg xmlns="http://www.w3.org/2000/svg" ${svgStyles}><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>`;
+    case 'sports':
+      return `<svg xmlns="http://www.w3.org/2000/svg" ${svgStyles}><path d="M14.4 14.4 9.6 9.6M18.657 5.343a3 3 0 1 1-4.243 4.243c.78-2.08 2.163-3.463 4.243-4.243ZM5.343 18.657a3 3 0 1 1 4.243-4.243c-.78 2.08-2.163 3.463-4.243 4.243ZM15 9l5 5M4 10l5 5"/></svg>`;
+    case 'dining':
+      return `<svg xmlns="http://www.w3.org/2000/svg" ${svgStyles}><path d="M3 2v7c0 1.1.9 2 2 2h4a2 2 0 0 0 2-2V2"/><path d="M7 2v20"/><path d="M21 15V2v0a5 5 0 0 0-5 5v6c0 1.1.9 2 2 2h3Zm0 0v7"/></svg>`;
+    case 'residence':
+      return `<svg xmlns="http://www.w3.org/2000/svg" ${svgStyles}><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>`;
+    case 'service':
+    default:
+      return `<svg xmlns="http://www.w3.org/2000/svg" ${svgStyles}><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>`;
+  }
+}
 
 let amapLoadPromise = null;
 
@@ -196,6 +215,7 @@ export default function MapContainer({ datasets, buildings, selectedBuilding, se
   
   const [amapLoaded, setAmapLoaded] = useState(!!window.AMap);
   const [is3D, setIs3D] = useState(true);
+  const [modelReady, setModelReady] = useState(false);
   const is3DRef = useRef(is3D);
   const [mapStyle, setMapStyle] = useState('color'); // 'color' or 'white'
   const mapStyleRef = useRef(mapStyle);
@@ -209,6 +229,7 @@ export default function MapContainer({ datasets, buildings, selectedBuilding, se
   const infoWindowRef = useRef(null);
   const glCustomLayerRef = useRef(null);
   const modelRootRef = useRef(null);
+  const modelLoadGenerationRef = useRef(0);
   const visibleModelBuildingIdsRef = useRef(null);
   const modelColorMapRef = useRef(null);
   const activeRouteRef = useRef(activeRoute);
@@ -251,6 +272,9 @@ export default function MapContainer({ datasets, buildings, selectedBuilding, se
     if (!amapLoaded || !datasets || !rootRef.current || mapRef.current) return;
 
     const AMap = window.AMap;
+    const modelLoadGeneration = ++modelLoadGenerationRef.current;
+    const isCurrentModelLoad = () => modelLoadGenerationRef.current === modelLoadGeneration;
+    setModelReady(false);
 
     // Initialize Map Instance
     const map = new AMap.Map(rootRef.current, {
@@ -268,6 +292,17 @@ export default function MapContainer({ datasets, buildings, selectedBuilding, se
     });
 
     mapRef.current = map;
+
+    // Set initial zoom class on container
+    const initialZoom = Math.floor(map.getZoom());
+    rootRef.current.classList.add(`zoom-${initialZoom}`);
+
+    // Update zoom class on zoomend
+    map.on('zoomend', () => {
+      const zoom = Math.floor(map.getZoom());
+      rootRef.current.className = rootRef.current.className.replace(/\bzoom-\d+\b/g, '');
+      rootRef.current.classList.add(`zoom-${zoom}`);
+    });
 
     // Add ControlBar for camera rotation/tilt controls (Free Camera Movement)
     map.plugin(['AMap.ControlBar'], () => {
@@ -372,6 +407,7 @@ export default function MapContainer({ datasets, buildings, selectedBuilding, se
         // Uniform Solid Flat White Material (unaffected by lighting/shadows)
         const whiteMaterial = new THREE.MeshBasicMaterial({
           color: 0xffffff,
+          side: THREE.DoubleSide,
           transparent: false,
           opacity: 1.0
         });
@@ -385,14 +421,17 @@ export default function MapContainer({ datasets, buildings, selectedBuilding, se
         // Load OBJ/MTL from public/models/white_model
         const mtlLoader = new MTLLoader();
         mtlLoader.load('/models/white_model.mtl', (materials) => {
+          if (!isCurrentModelLoad()) return;
           materials.preload();
           const objLoader = new OBJLoader();
           objLoader.setMaterials(materials);
           objLoader.load('/models/white_model.obj', (object) => {
+            if (!isCurrentModelLoad()) return;
             // Apply scale, rotation, and translation offsets for UTM vs Web Mercator alignment
             object.scale.set(1.1345, 1.1345, 1.1345);
             object.rotation.z = -0.918 * Math.PI / 180;
             object.position.set(-4.5, 2.0, 0);
+            object.visible = is3DRef.current || !!activeRouteRef.current;
             
             // Force every submesh to use its own cloned material (so we can color individually) and add crisp outlines
             object.traverse((child) => {
@@ -413,12 +452,21 @@ export default function MapContainer({ datasets, buildings, selectedBuilding, se
             // Apply stored colors (in case route was selected before model loaded)
             applyModelColors(object, modelColorMapRef.current);
             scene.add(object);
+            setModelReady(true);
             map.render();
+          }, undefined, (error) => {
+            if (!isCurrentModelLoad()) return;
+            console.error('加载 3D 建筑模型失败:', error);
+            setModelReady(false);
           });
+        }, undefined, (error) => {
+          if (!isCurrentModelLoad()) return;
+          console.error('加载 3D 建筑材质失败:', error);
+          setModelReady(false);
         });
       },
       render: () => {
-        if (!renderer || !scene || !camera) return;
+        if (!renderer || !scene || !camera || !modelRootRef.current?.visible) return;
 
         const { near, far, fov, up, lookAt, position } = map.customCoords.getCameraParams();
         camera.near = near;
@@ -430,22 +478,22 @@ export default function MapContainer({ datasets, buildings, selectedBuilding, se
         camera.updateProjectionMatrix();
 
         renderer.resetState();
+        renderer.clearDepth();
         renderer.render(scene, camera);
-        map.render();
       }
     });
 
     map.add(glLayer);
     glCustomLayerRef.current = glLayer;
 
-    // Show/hide based on current is3D value
-    if (is3DRef.current) {
-      glLayer.show();
-    } else {
-      glLayer.hide();
-    }
+    glLayer.show();
 
     return () => {
+      if (isCurrentModelLoad()) {
+        modelLoadGenerationRef.current += 1;
+        modelRootRef.current = null;
+        glCustomLayerRef.current = null;
+      }
       if (mapRef.current) {
         mapRef.current.destroy();
         mapRef.current = null;
@@ -525,12 +573,21 @@ export default function MapContainer({ datasets, buildings, selectedBuilding, se
               height: 0
             };
           }
+          if (!modelReady) {
+            return {
+              strokeColor: isSelected ? '#1e6258' : '#fffdf6',
+              strokeWeight: isSelected ? 2 : 1.2,
+              fillColor: isSelected ? '#1e6258' : activeRoute.color,
+              fillOpacity: 0.96,
+              height: 0
+            };
+          }
           return {
             strokeColor: isSelected ? '#1e6258' : 'transparent',
             strokeWeight: isSelected ? 2 : 1.2,
             fillColor: isSelected ? '#1e6258' : 'transparent',
             fillOpacity: isSelected ? 0.35 : 0.001,
-            height: 15
+            height: 0
           };
         } else {
           // Non-route buildings: 2D white flat style
@@ -554,12 +611,21 @@ export default function MapContainer({ datasets, buildings, selectedBuilding, se
             height: 0
           };
         }
+        if (!modelReady) {
+          return {
+            strokeColor: mapStyleRef.current === 'white' ? '#cbd5e1' : '#fffdf6',
+            strokeWeight: isSelected ? 2 : 1.2,
+            fillColor: isSelected ? '#1e6258' : (mapStyleRef.current === 'white' ? '#ffffff' : baseColor),
+            fillOpacity: 0.96,
+            height: 0
+          };
+        }
         return {
           strokeColor: isSelected ? '#1e6258' : 'transparent',
           strokeWeight: isSelected ? 2 : 1.2,
           fillColor: isSelected ? '#1e6258' : 'transparent',
           fillOpacity: isSelected ? 0.35 : 0.001,
-          height: 15
+          height: 0
         };
       } else {
         if (mapStyleRef.current === 'white') {
@@ -594,14 +660,14 @@ export default function MapContainer({ datasets, buildings, selectedBuilding, se
           const isRouteStop = isRouteStopBuilding(feature, activeRoute);
           if (isRouteStop) {
             hoverColor = activeRoute.color;
-            hoverOpacity = isField ? 0.9 : 0.4;
+            hoverOpacity = isField || !modelReady ? 0.9 : 0.4;
           } else {
             hoverColor = '#1e6258';
             hoverOpacity = 0.95;
           }
         } else {
           hoverColor = mapStyleRef.current === 'white' ? '#1e6258' : (categoryColors[cat] || '#1e6258');
-          hoverOpacity = is3DRef.current ? (isField ? 0.9 : 0.4) : 0.95;
+          hoverOpacity = is3DRef.current && modelReady ? (isField ? 0.9 : 0.4) : 0.95;
         }
         
         overlay.setOptions({
@@ -635,9 +701,9 @@ export default function MapContainer({ datasets, buildings, selectedBuilding, se
               });
             } else {
               overlay.setOptions({
-                fillColor: isSelected ? '#1e6258' : 'transparent',
-                fillOpacity: isSelected ? 0.35 : 0.001,
-                strokeColor: isSelected ? '#1e6258' : 'transparent',
+                fillColor: isSelected ? '#1e6258' : (modelReady ? 'transparent' : activeRoute.color),
+                fillOpacity: modelReady ? (isSelected ? 0.35 : 0.001) : 0.96,
+                strokeColor: isSelected ? '#1e6258' : (modelReady ? 'transparent' : '#fffdf6'),
                 strokeWeight: isSelected ? 2 : 1.2
               });
             }
@@ -659,9 +725,13 @@ export default function MapContainer({ datasets, buildings, selectedBuilding, se
             });
           } else {
             overlay.setOptions({
-              fillColor: isSelected ? '#1e6258' : 'transparent',
-              fillOpacity: isSelected ? 0.35 : 0.001,
-              strokeColor: isSelected ? '#1e6258' : 'transparent',
+              fillColor: isSelected ? '#1e6258' : (modelReady
+                ? 'transparent'
+                : (mapStyleRef.current === 'white' ? '#ffffff' : (categoryColors[feature.properties?.category] || '#c8c5b8'))),
+              fillOpacity: modelReady ? (isSelected ? 0.35 : 0.001) : 0.96,
+              strokeColor: isSelected ? '#1e6258' : (modelReady
+                ? 'transparent'
+                : (mapStyleRef.current === 'white' ? '#cbd5e1' : '#fffdf6')),
               strokeWeight: isSelected ? 2 : 1.2
             });
           }
@@ -704,10 +774,15 @@ export default function MapContainer({ datasets, buildings, selectedBuilding, se
       const name = feature.properties?.displayName;
       if (name && name !== '校园建筑') {
         const center = featureCenterAMap(feature);
+        const category = feature.properties?.category || 'service';
+        const iconSvg = getCategoryIconSvg(category);
         const labelMarker = new AMap.Marker({
           position: center,
-          content: `<div class="building-label"><span>${name}</span></div>`,
-          offset: new AMap.Pixel(-60, -10),
+          content: `<div class="building-marker-capsule ${category}">
+                      <div class="marker-icon-wrapper">${iconSvg}</div>
+                      <span class="marker-title">${name}</span>
+                    </div>`,
+          offset: new AMap.Pixel(0, 0),
           bubble: true, // Let clicks bubble down to building polygons
           zIndex: 100
         });
@@ -717,7 +792,7 @@ export default function MapContainer({ datasets, buildings, selectedBuilding, se
     });
     labelMarkersRef.current = newLabelMarkers;
 
-  }, [buildings, selectedBuilding, amapLoaded, setSelectedBuilding, mapStyle, activeRoute]);
+  }, [buildings, selectedBuilding, amapLoaded, setSelectedBuilding, mapStyle, activeRoute, modelReady]);
 
   // Helper function: find nearest point on line segment to a point
   function findNearestPointOnSegment(px, py, ax, ay, bx, by) {
@@ -988,12 +1063,15 @@ export default function MapContainer({ datasets, buildings, selectedBuilding, se
     if (effectiveIs3D) {
       map.setPitch(55);
       map.setRotation(15);
-      glCustomLayerRef.current?.show();
     } else {
       map.setPitch(0);
       map.setRotation(0);
-      glCustomLayerRef.current?.hide();
     }
+
+    if (modelRootRef.current) {
+      modelRootRef.current.visible = effectiveIs3D;
+    }
+    map.render();
 
     // Update building heights and colors dynamically without recreating overlays
     buildingOverlaysRef.current.forEach(overlay => {
@@ -1016,10 +1094,10 @@ export default function MapContainer({ datasets, buildings, selectedBuilding, se
             fillOpacity = 0.8;
             strokeColor = isSelected ? '#1e6258' : '#fffdf6';
           } else {
-            height = 15;
-            fillColor = isSelected ? '#1e6258' : 'transparent';
-            fillOpacity = isSelected ? 0.35 : 0.001;
-            strokeColor = isSelected ? '#1e6258' : 'transparent';
+            height = 0;
+            fillColor = isSelected ? '#1e6258' : (modelReady ? 'transparent' : activeRoute.color);
+            fillOpacity = modelReady ? (isSelected ? 0.35 : 0.001) : 0.96;
+            strokeColor = isSelected ? '#1e6258' : (modelReady ? 'transparent' : '#fffdf6');
           }
         } else {
           // Non-route buildings: 2D white flat
@@ -1035,10 +1113,14 @@ export default function MapContainer({ datasets, buildings, selectedBuilding, se
           fillOpacity = 0.8;
           strokeColor = isSelected ? '#1e6258' : (mapStyle === 'white' ? '#cbd5e1' : '#fffdf6');
         } else {
-          height = 15;
-          fillColor = isSelected ? '#1e6258' : 'transparent';
-          fillOpacity = isSelected ? 0.35 : 0.001;
-          strokeColor = isSelected ? '#1e6258' : 'transparent';
+          height = 0;
+          fillColor = isSelected ? '#1e6258' : (modelReady
+            ? 'transparent'
+            : (mapStyle === 'white' ? '#ffffff' : (categoryColors[feature.properties?.category] || '#c8c5b8')));
+          fillOpacity = modelReady ? (isSelected ? 0.35 : 0.001) : 0.96;
+          strokeColor = isSelected ? '#1e6258' : (modelReady
+            ? 'transparent'
+            : (mapStyle === 'white' ? '#cbd5e1' : '#fffdf6'));
         }
       } else {
         height = 0;
@@ -1060,7 +1142,7 @@ export default function MapContainer({ datasets, buildings, selectedBuilding, se
         fillOpacity: fillOpacity
       });
     });
-  }, [is3D, mapStyle, selectedBuilding, amapLoaded, activeRoute]);
+  }, [is3D, mapStyle, selectedBuilding, amapLoaded, activeRoute, modelReady]);
 
   // Custom Zoom Handlers
   const handleZoomIn = () => {

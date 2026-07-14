@@ -111,7 +111,7 @@ export default function App() {
     <div className="site-shell">
       <header className="site-header">
         <a className="brand" href="#top" aria-label="湖南师范大学二里半校园导览首页">
-          <span className="brand-seal">师</span>
+          <img src="/images/师大校徽.webp" alt="湖南师范大学校徽" className="brand-seal" />
           <span><strong>湖南师范大学</strong><small>二里半校园导览</small></span>
         </a>
         <nav className={menuOpen ? 'main-nav open' : 'main-nav'}>
@@ -223,7 +223,7 @@ export default function App() {
         </section>
       </main>
 
-      <footer><div className="footer-brand"><span className="brand-seal">师</span><span><strong>湖南师范大学</strong><small>二里半校园导览地图</small></span></div><p>本页面为校园导览设计示范 · 地图数据来源于本地二里半矢量底图</p><a href="#top">返回顶部 ↑</a></footer>
+      <footer><div className="footer-brand"><img src="/images/师大校徽.webp" alt="湖南师范大学校徽" className="brand-seal" /><span><strong>湖南师范大学</strong><small>二里半校园导览地图</small></span></div><p>本页面为校园导览设计示范 · 地图数据来源于本地二里半矢量底图</p><a href="#top">返回顶部 ↑</a></footer>
     </div>
   );
 }

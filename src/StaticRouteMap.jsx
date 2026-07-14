@@ -3,7 +3,7 @@ import RouteModelLayer from './RouteModelLayer';
 
 const SVG_WIDTH = 1600;
 const SVG_HEIGHT = 1100;
-const MAP_BOX = { x: 300, y: 170, width: 1000, height: 755 };
+const MAP_BOX = { x: 270, y: 155, width: 1060, height: 790 };
 const MAP_TILT = 0.64;
 const MAP_SHEAR = 0.15;
 
@@ -14,6 +14,41 @@ const categoryPalette = {
   residence: { roof: '#8eb4a7', side: '#638b7f' },
   teaching: { roof: '#d7c8aa', side: '#a99b7f' },
   service: { roof: '#c9c6ba', side: '#969388' },
+};
+
+const defaultMapPalette = {
+  campusTop: '#e8ead8',
+  campusBottom: '#d9deca',
+  boundaryShadow: '#64746b',
+  boundaryStroke: '#fffaf0',
+  boundaryOutline: '#506c62',
+  waterFill: '#b9d8d6',
+  waterStroke: '#99c5c3',
+  roadOuter: '#b3aa97',
+  roadInner: '#f6f0df',
+  buildingStroke: '#f7f2e7',
+  buildings: categoryPalette,
+};
+
+const routeAMapPalette = {
+  campusTop: '#f2eed8',
+  campusBottom: '#d5d8b5',
+  boundaryShadow: '#5d684f',
+  boundaryStroke: '#fff4d5',
+  boundaryOutline: '#5a6a53',
+  waterFill: '#9bc5b6',
+  waterStroke: '#6fa392',
+  roadOuter: '#a89c78',
+  roadInner: '#f6e7b9',
+  buildingStroke: '#f8edcf',
+  buildings: {
+    library: { roof: '#c59b5d', side: '#916c3f' },
+    sports: { roof: '#b8755e', side: '#8f5547' },
+    dining: { roof: '#c9aa4f', side: '#977f36' },
+    residence: { roof: '#7fa18a', side: '#5e7d6b' },
+    teaching: { roof: '#cab88f', side: '#9c8a68' },
+    service: { roof: '#adb39c', side: '#818873' },
+  },
 };
 
 // 静态地图中途经点显示名覆盖（仅影响标签展示，不影响建筑匹配 / 3D 模型 / 坐标）。
@@ -186,8 +221,8 @@ function getStopAnchors(route, buildings, project) {
 }
 
 const CALLOUT_CARD_W = 244;
-const CALLOUT_LEFT_X = 46;
-const CALLOUT_RIGHT_X = 1310;
+const CALLOUT_LEFT_X = 60;
+const CALLOUT_RIGHT_X = 1296;
 const CALLOUT_TEXT_X_OFFSET = 48;
 const CALLOUT_TEXT_MAX_W = 182;
 const CALLOUT_INTRO_LINE_H = 15.5;
@@ -248,7 +283,7 @@ function routePath(route, project) {
   return ringPath(route.coordinates.map(([lat, lng]) => [lng, lat]), project, false);
 }
 
-function BuildingLayer({ features, modelReady, route, project }) {
+function BuildingLayer({ features, mapPalette, modelReady, route, project }) {
   const stopNames = route.id === 'none' ? new Set() : new Set(route.stops);
   const prepared = features
     .map((feature) => {
@@ -262,7 +297,7 @@ function BuildingLayer({ features, modelReady, route, project }) {
         projectedCenter,
         isStop,
         path: geometryPath(feature.geometry, project),
-        palette: categoryPalette[category],
+        palette: mapPalette.buildings[category],
       };
     })
     .sort((a, b) => a.projectedCenter[1] - b.projectedCenter[1]);
@@ -277,7 +312,7 @@ function BuildingLayer({ features, modelReady, route, project }) {
             d={path}
             fill={isStop ? route.color : palette.roof}
             fillRule="evenodd"
-            stroke="#f7f2e7"
+            stroke={mapPalette.buildingStroke}
             strokeWidth={isStop ? 2 : 1.25}
             opacity={isStop ? 0.72 : 0.78}
           />
@@ -441,7 +476,7 @@ function RouteCallouts({ callouts, route }) {
               opacity="0.72"
             />
             <circle cx={item.point[0]} cy={item.point[1]} r="7" fill="#fffdf7" stroke={route.color} strokeWidth="3" />
-            <rect x={cardX} y={item.cardTop} width={cardWidth} height={item.cardHeight} rx="8" fill="#fbf8ef" stroke="#d8d0bf" />
+            <rect x={cardX} y={item.cardTop} width={cardWidth} height={item.cardHeight} rx="8" fill="#fbf8ef" fillOpacity={route.id === 'routeA' ? 0.78 : 1} stroke="#d8d0bf" />
             <rect x={cardX} y={item.cardTop} width="5" height={item.cardHeight} rx="2.5" fill={route.color} />
             <circle cx={numberX} cy={item.cardTop + 25} r="14" fill={route.color} />
             <text x={numberX} y={item.cardTop + 30} textAnchor="middle" className="callout-number">{item.index + 1}</text>
@@ -475,15 +510,7 @@ const StaticRouteMap = forwardRef(function StaticRouteMap({ datasets, modelReady
   const descriptionLines = route.description.length > 27
     ? [route.description.slice(0, 27), route.description.slice(27)]
     : [route.description];
-
-  // 路线A 途经点6(经纬楼)与终点之间路段在地图上的投影中点，作为实景照片引线的落点（落在路线线上，而非浮空）。
-  // 注意：route.coordinates 格式为 [lat, lng]，而 project() 期望 [lng, lat]，必须交换。
-  const photoRoutePoint = useMemo(() => {
-    if (route.id !== 'routeA') return null;
-    const a = project([route.coordinates[5][1], route.coordinates[5][0]]);
-    const b = project([route.coordinates[6][1], route.coordinates[6][0]]);
-    return [(a[0] + b[0]) / 2, (a[1] + b[1]) / 2];
-  }, [route, project]);
+  const mapPalette = route.id === 'routeA' ? routeAMapPalette : defaultMapPalette;
 
   return (
     <svg
@@ -500,8 +527,8 @@ const StaticRouteMap = forwardRef(function StaticRouteMap({ datasets, modelReady
           <stop offset="1" stopColor="#ebe4d4" />
         </linearGradient>
         <linearGradient id="campusGradient" x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0" stopColor="#e8ead8" />
-          <stop offset="1" stopColor="#d9deca" />
+          <stop offset="0" stopColor={mapPalette.campusTop} />
+          <stop offset="1" stopColor={mapPalette.campusBottom} />
         </linearGradient>
         <pattern id="paperNoise" width="24" height="24" patternUnits="userSpaceOnUse">
           <circle cx="3" cy="5" r="0.7" fill="#9c927c" opacity="0.12" />
@@ -514,15 +541,6 @@ const StaticRouteMap = forwardRef(function StaticRouteMap({ datasets, modelReady
           <feGaussianBlur stdDeviation="6" />
         </filter>
         <clipPath id="campusClip"><path d={boundaryPath} /></clipPath>
-        <clipPath id="photoClip"><rect x="5" y="5" width="150" height="95" rx="4" /></clipPath>
-        <mask id="photoSoftEdge">
-          <rect x="0" y="0" width="160" height="130" rx="7" fill="white" />
-          <rect x="5" y="5" width="150" height="95" rx="4" fill="white" opacity="0.15" />
-        </mask>
-        <linearGradient id="photoBorderFade" x1="0" y1="0" x2="1" y2="1">
-          <stop offset="0" stopColor="#d8d0bf" stopOpacity="0.25" />
-          <stop offset="1" stopColor="#d8d0bf" stopOpacity="0.65" />
-        </linearGradient>
         <marker id="routeArrow" markerWidth="9" markerHeight="9" refX="7.5" refY="4.5" orient="auto" markerUnits="userSpaceOnUse">
           <path d="M0.8,0.8 L8.2,4.5 L0.8,8.2 Z" fill={route.color} stroke="#fffaf3" strokeWidth="0.8" />
         </marker>
@@ -530,6 +548,7 @@ const StaticRouteMap = forwardRef(function StaticRouteMap({ datasets, modelReady
           text { font-family: "Microsoft YaHei", "PingFang SC", "Noto Sans CJK SC", sans-serif; }
           .poster-kicker { font-size: 18px; font-weight: 700; letter-spacing: 7px; fill: #8b6b32; }
           .poster-title { font-family: "STSong", "SimSun", serif; font-size: 53px; font-weight: 700; letter-spacing: 5px; fill: #173f3a; }
+          .route-a-title { font-size: 61px; letter-spacing: 6px; paint-order: stroke; stroke: #fff8e7; stroke-width: 8px; stroke-opacity: 0.86; stroke-linejoin: round; }
           .poster-subtitle { font-size: 14px; font-weight: 700; letter-spacing: 4px; fill: #7f887f; }
           .poster-description { font-size: 17px; fill: #586761; }
           .overview-labels text { font-size: 9.2px; font-weight: 700; fill: #38554e; paint-order: stroke; stroke: #f4f0e5; stroke-width: 3.2px; stroke-linejoin: round; }
@@ -548,35 +567,56 @@ const StaticRouteMap = forwardRef(function StaticRouteMap({ datasets, modelReady
 
       <rect width={SVG_WIDTH} height={SVG_HEIGHT} fill="url(#paperGradient)" />
       <rect width={SVG_WIDTH} height={SVG_HEIGHT} fill="url(#paperNoise)" />
-      <path d="M44 42 H1556 V1058 H44 Z" fill="none" stroke="#b9ad94" strokeWidth="1.4" />
-      <path d="M57 55 H1543 V1045 H57 Z" fill="none" stroke="#d6cdbb" strokeWidth="0.8" />
+      {route.id === 'routeA' && (
+        <g className="route-background-layer">
+          <image
+            className="route-background-image"
+            href="/images/road_bg.jpg"
+            x="0"
+            y="0"
+            width={SVG_WIDTH}
+            height={SVG_HEIGHT}
+            preserveAspectRatio="xMidYMid slice"
+            opacity="0.5"
+          />
+          <rect x="42" y="1010" width="1516" height="48" fill="#f7f3e9" fillOpacity="0.68" />
+        </g>
+      )}
+      <path d="M28 28 H1572 V1072 H28 Z" fill="none" stroke="#b9ad94" strokeWidth="1.4" />
+      <path d="M42 42 H1558 V1058 H42 Z" fill="none" stroke="#d6cdbb" strokeWidth="0.8" />
 
-      <g transform="translate(78 76)">
-        <rect width="88" height="88" rx="10" fill="#174b45" />
-        <text x="44" y="59" textAnchor="middle" fontFamily="STKaiti, KaiTi, serif" fontSize="43" fontWeight="700" fill="#f4e4bd">师</text>
-      </g>
-      <text x="193" y="93" className="poster-kicker">湖南师范大学 · 二里半校区</text>
-      <text x="193" y="151" className="poster-title">{STATIC_ROUTE_LABEL[route.id] || route.posterTitle}</text>
-      <text x="196" y="183" className="poster-subtitle">{route.subtitle}</text>
+      {route.id === 'routeA' ? (
+        <text x="84" y="137" className="poster-title route-a-title">校园漫步路线A</text>
+      ) : (
+        <>
+          <g transform="translate(78 76)">
+            <rect width="88" height="88" rx="10" fill="#174b45" />
+            <text x="44" y="59" textAnchor="middle" fontFamily="STKaiti, KaiTi, serif" fontSize="43" fontWeight="700" fill="#f4e4bd">师</text>
+          </g>
+          <text x="193" y="93" className="poster-kicker">湖南师范大学 · 二里半校区</text>
+          <text x="193" y="151" className="poster-title">{STATIC_ROUTE_LABEL[route.id] || route.posterTitle}</text>
+          <text x="196" y="183" className="poster-subtitle">{route.subtitle}</text>
 
-      <g transform="translate(1080 76)">
-        <rect width="430" height="103" rx="9" fill="#f8f4ea" stroke="#d4cbb8" />
-        <rect width="7" height="103" rx="3.5" fill={route.color} />
-        <text x="27" y="31" className="route-meta">{route.id === 'none' ? '校园静态总览' : `${route.shortTitle} · ${route.time} · ${route.stops.length} 个途经点`}</text>
-        <text x="27" y="58" fontSize="13" fill="#66736d">
-          {descriptionLines.map((line, index) => <tspan key={line} x="27" dy={index ? 22 : 0}>{line}</tspan>)}
-        </text>
-      </g>
+          <g transform="translate(1080 76)">
+            <rect width="430" height="103" rx="9" fill="#f8f4ea" stroke="#d4cbb8" />
+            <rect width="7" height="103" rx="3.5" fill={route.color} />
+            <text x="27" y="31" className="route-meta">{route.id === 'none' ? '校园静态总览' : `${route.shortTitle} · ${route.time} · ${route.stops.length} 个途经点`}</text>
+            <text x="27" y="58" fontSize="13" fill="#66736d">
+              {descriptionLines.map((line, index) => <tspan key={line} x="27" dy={index ? 22 : 0}>{line}</tspan>)}
+            </text>
+          </g>
+        </>
+      )}
 
       <g filter="url(#softShadow)">
-        <path d={boundaryPath} transform="translate(10 14)" fill="#64746b" opacity="0.18" />
-        <path d={boundaryPath} fill="url(#campusGradient)" stroke="#fffaf0" strokeWidth="9" strokeLinejoin="round" />
-        <path d={boundaryPath} fill="none" stroke="#506c62" strokeWidth="2.2" strokeLinejoin="round" />
+        <path d={boundaryPath} transform="translate(10 14)" fill={mapPalette.boundaryShadow} opacity="0.18" />
+        <path d={boundaryPath} fill="url(#campusGradient)" stroke={mapPalette.boundaryStroke} strokeWidth="9" strokeLinejoin="round" />
+        <path d={boundaryPath} fill="none" stroke={mapPalette.boundaryOutline} strokeWidth="2.2" strokeLinejoin="round" />
       </g>
 
       <g clipPath="url(#campusClip)">
         <g className="water-layer">
-          {water.features.map((feature, index) => <path key={index} d={geometryPath(feature.geometry, project)} fill="#b9d8d6" stroke="#99c5c3" strokeWidth="1.5" fillRule="evenodd" />)}
+          {water.features.map((feature, index) => <path key={index} d={geometryPath(feature.geometry, project)} fill={mapPalette.waterFill} stroke={mapPalette.waterStroke} strokeWidth="1.5" fillRule="evenodd" />)}
         </g>
         <g className="road-layer">
           {roads.features.map((feature, index) => {
@@ -585,8 +625,8 @@ const StaticRouteMap = forwardRef(function StaticRouteMap({ datasets, modelReady
             const path = geometryPath(feature.geometry, project);
             return (
               <g key={feature.properties?.id || index}>
-                <path d={path} fill="none" stroke="#b3aa97" strokeWidth={major ? 9 : 4.5} strokeLinecap="round" strokeLinejoin="round" opacity="0.72" />
-                <path d={path} fill="none" stroke="#f6f0df" strokeWidth={major ? 5.5 : 2.4} strokeLinecap="round" strokeLinejoin="round" opacity="0.95" />
+                <path d={path} fill="none" stroke={mapPalette.roadOuter} strokeWidth={major ? 9 : 4.5} strokeLinecap="round" strokeLinejoin="round" opacity="0.72" />
+                <path d={path} fill="none" stroke={mapPalette.roadInner} strokeWidth={major ? 5.5 : 2.4} strokeLinecap="round" strokeLinejoin="round" opacity="0.95" />
               </g>
             );
           })}
@@ -599,7 +639,7 @@ const StaticRouteMap = forwardRef(function StaticRouteMap({ datasets, modelReady
             <path d={activeRoutePath} fill="none" stroke="#fff" strokeWidth="1.2" opacity="0.5" strokeDasharray="3 11" strokeLinecap="round" />
           </g>
         )}
-        <BuildingLayer features={buildings.features} modelReady={modelReady} route={route} project={project} />
+        <BuildingLayer features={buildings.features} mapPalette={mapPalette} modelReady={modelReady} route={route} project={project} />
       </g>
 
       <RouteModelLayer
@@ -623,31 +663,8 @@ const StaticRouteMap = forwardRef(function StaticRouteMap({ datasets, modelReady
 
       {route.id !== 'none' && <RouteEndpoints route={route} project={project} />}
 
-      {/* 校园实景插图：路线A 途经点6(经纬楼)与终点之间的法桐大道秋景
-          引线落在6-终点之间的路线线上（photoRoutePoint），不再使用浮空圆点标记 */}
-      {photoRoutePoint && (
-        <g filter="url(#softShadow)">
-          {/* 引线：自路线A 途经点6与终点之间路段指向法桐大道实景图 */}
-          <polyline
-            points={`${photoRoutePoint[0]},${photoRoutePoint[1]} ${photoRoutePoint[0]},${photoRoutePoint[1] - 45} 760,360`}
-            fill="none"
-            stroke={route.color}
-            strokeWidth="2"
-            strokeDasharray="4 3"
-            opacity="0.8"
-          />
-          {/* 图片卡片：半透明边框，轻量填充，便于融入地图空白处 */}
-          <g transform="translate(760 280)" mask="url(#photoSoftEdge)">
-            <rect width="160" height="130" rx="7" fill="#fffdf7" fillOpacity="0.78" stroke="url(#photoBorderFade)" strokeWidth="2" />
-            <image href="/images/road_bg.jpg" x="5" y="5" width="150" height="95" preserveAspectRatio="xMidYMid slice" clipPath="url(#photoClip)" opacity="0.92" />
-            <rect x="5" y="100" width="150" height="25" rx="0" fill="#f8f4e9" fillOpacity="0.8" />
-            <text x="80" y="117" textAnchor="middle" className="map-note" style={{ fontSize: '10px', letterSpacing: '0.5px' }}>法桐大道（途经点 5—6）</text>
-          </g>
-        </g>
-      )}
-
       <g transform="translate(338 966)">
-        <rect width={route.id === 'none' ? 650 : 750} height="43" rx="7" fill="#f8f4e9" stroke="#d7cfbe" />
+        <rect width={route.id === 'none' ? 650 : 750} height="43" rx="7" fill="#f8f4e9" fillOpacity={route.id === 'routeA' ? 0.78 : 1} stroke="#d7cfbe" />
         <text x="15" y="27" className="map-note">图例 / LEGEND</text>
         <g transform="translate(126 14)">
           <rect width="21" height="15" rx="2" fill="#d7c8aa" stroke="#f7f2e7" />

@@ -1,6 +1,6 @@
 @import url('https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@600;700&family=Noto+Sans+SC:wght@400;500;600&display=swap');
 @import 'leaflet/dist/leaflet.css';
-:root{font-family:'Noto Sans SC','Microsoft YaHei',sans-serif;color:#173d38;background:#e9ede6;--green:#174c45;--gold:#c79b4a}*{box-sizing:border-box}html,body,#map-root{width:100%;height:100%;margin:0;overflow:hidden}button,input,select{font:inherit}.standalone-map-app{width:100%;height:100%;display:flex;flex-direction:column}.map-topbar{height:72px;flex:0 0 72px;background:#fff;display:flex;align-items:center;padding:0 28px;border-bottom:1px solid #dce2dc;position:relative;z-index:1000;box-shadow:0 3px 16px rgba(22,65,58,.08)}.map-brand{display:flex;align-items:center;gap:10px;text-decoration:none;color:var(--green);min-width:255px}.map-seal{width:41px;height:41px;border-radius:50%;background:var(--green);color:#fff;display:grid;place-items:center;font:700 21px 'Noto Serif SC',serif;box-shadow:inset 0 0 0 3px #fff,inset 0 0 0 4px rgba(255,255,255,.5)}.map-brand>span:last-child{display:flex;flex-direction:column}.map-brand strong{font:700 16px 'Noto Serif SC',serif;letter-spacing:.1em}.map-brand small{font-size:9px;color:#85918d;letter-spacing:.2em;margin-top:2px}.map-top-title{margin:auto;display:flex;align-items:center;gap:8px;font-size:13px}.map-top-title svg{color:var(--gold)}.map-top-title em{font-style:normal;color:#98a29e;font-size:10px;margin-left:7px}.back-home{min-width:150px;justify-content:flex-end;text-decoration:none;color:#63736e;font-size:11px;display:flex;align-items:center;gap:4px}.mobile-sidebar-toggle{display:none;border:0;background:transparent;color:var(--green)}.map-workspace{height:calc(100% - 72px);display:flex}.standalone-sidebar{width:310px;flex:0 0 310px;background:#fff;border-right:1px solid #d9dfd9;display:flex;flex-direction:column;position:relative;z-index:600}.standalone-search{height:46px;margin:18px 18px 12px;border:1px solid #d7ded9;display:flex;align-items:center;gap:8px;padding:0 12px}.standalone-search svg{color:#8e9a95}.standalone-search input{border:0;outline:0;min-width:0;flex:1;font-size:12px}.standalone-search button{border:0;background:transparent;padding:2px;color:#8c9994}.standalone-categories{padding:0 18px 15px;display:grid;grid-template-columns:repeat(3,1fr);gap:6px;border-bottom:1px solid #e7eae7}.standalone-categories button{border:1px solid #e2e6e2;background:#f8f9f6;color:#6d7c77;height:56px;font-size:9px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:5px;cursor:pointer}.standalone-categories button.active{background:var(--green);border-color:var(--green);color:#fff}.sidebar-section-head{height:44px;padding:0 19px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid #edf0ed}.sidebar-section-head span{font-size:12px;font-weight:600}.sidebar-section-head small{font-size:9px;color:#94a09b}.building-list{flex:1;overflow:auto;padding:5px 8px}.building-list::-webkit-scrollbar{width:4px}.building-list::-webkit-scrollbar-thumb{background:#cad3ce}.building-list button{width:100%;min-height:52px;border:0;background:transparent;padding:7px 10px;display:flex;align-items:center;gap:10px;text-align:left;color:#263f3a;cursor:pointer;border-bottom:1px solid #f0f2f0}.building-list button:hover,.building-list button.active{background:#eef4ef}.building-list button>span:nth-child(2){display:flex;flex:1;min-width:0;flex-direction:column}.building-list b{font-size:11px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.building-list small{font-size:8px;color:#9ba49f;margin-top:4px}.building-list>button>svg{color:#abb5b0}.building-dot{width:8px;height:8px;border-radius:50%;flex:0 0 8px;background:#c8c5b8}.building-dot.teaching,.standalone-legend i.teaching{background:#d9c6a4}.building-dot.library,.standalone-legend i.library{background:#b78b67}.building-dot.sports,.standalone-legend i.sports{background:#d97b5d}.building-dot.dining,.standalone-legend i.dining{background:#d5a54e}.building-dot.residence,.standalone-legend i.residence{background:#aab6c3}.route-selector{padding:14px 18px 17px;background:#f3f5ef;border-top:1px solid #dfe5df}.route-selector p{font-size:10px;font-weight:600;margin:0 0 10px;display:flex;align-items:center;gap:6px;color:var(--green)}
+:root{font-family:'Noto Sans SC','Microsoft YaHei',sans-serif;color:#173d38;background:#e9ede6;--green:#174c45;--gold:#c79b4a}*{box-sizing:border-box}html,body,#map-root{width:100%;height:100%;margin:0;overflow:hidden}button,input,select{font:inherit}.standalone-map-app{width:100%;height:100%;display:flex;flex-direction:column}.map-topbar{height:72px;flex:0 0 72px;background:#fff;display:flex;align-items:center;padding:0 28px;border-bottom:1px solid #dce2dc;position:relative;z-index:1000;box-shadow:0 3px 16px rgba(22,65,58,.08)}.map-brand{display:flex;align-items:center;gap:10px;text-decoration:none;color:var(--green);min-width:255px}.map-seal{width:41px;height:41px;border-radius:50%;object-fit:cover}.map-brand>span:last-child{display:flex;flex-direction:column}.map-brand strong{font:700 16px 'Noto Serif SC',serif;letter-spacing:.1em}.map-brand small{font-size:9px;color:#85918d;letter-spacing:.2em;margin-top:2px}.map-top-title{margin:auto;display:flex;align-items:center;gap:8px;font-size:13px}.map-top-title svg{color:var(--gold)}.map-top-title em{font-style:normal;color:#98a29e;font-size:10px;margin-left:7px}.back-home{min-width:150px;justify-content:flex-end;text-decoration:none;color:#63736e;font-size:11px;display:flex;align-items:center;gap:4px}.mobile-sidebar-toggle{display:none;border:0;background:transparent;color:var(--green)}.map-workspace{height:calc(100% - 72px);display:flex}.standalone-sidebar{width:310px;flex:0 0 310px;background:#fff;border-right:1px solid #d9dfd9;display:flex;flex-direction:column;position:relative;z-index:600}.standalone-search{height:46px;margin:18px 18px 12px;border:1px solid #d7ded9;display:flex;align-items:center;gap:8px;padding:0 12px}.standalone-search svg{color:#8e9a95}.standalone-search input{border:0;outline:0;min-width:0;flex:1;font-size:12px}.standalone-search button{border:0;background:transparent;padding:2px;color:#8c9994}.standalone-categories{padding:0 18px 15px;display:grid;grid-template-columns:repeat(3,1fr);gap:6px;border-bottom:1px solid #e7eae7}.standalone-categories button{border:1px solid #e2e6e2;background:#f8f9f6;color:#6d7c77;height:56px;font-size:9px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:5px;cursor:pointer}.standalone-categories button.active{background:var(--green);border-color:var(--green);color:#fff}.sidebar-section-head{height:44px;padding:0 19px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid #edf0ed}.sidebar-section-head span{font-size:12px;font-weight:600}.sidebar-section-head small{font-size:9px;color:#94a09b}.building-list{flex:1;overflow:auto;padding:5px 8px}.building-list::-webkit-scrollbar{width:4px}.building-list::-webkit-scrollbar-thumb{background:#cad3ce}.building-list button{width:100%;min-height:52px;border:0;background:transparent;padding:7px 10px;display:flex;align-items:center;gap:10px;text-align:left;color:#263f3a;cursor:pointer;border-bottom:1px solid #f0f2f0}.building-list button:hover,.building-list button.active{background:#eef4ef}.building-list button>span:nth-child(2){display:flex;flex:1;min-width:0;flex-direction:column}.building-list b{font-size:11px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.building-list small{font-size:8px;color:#9ba49f;margin-top:4px}.building-list>button>svg{color:#abb5b0}.building-dot{width:8px;height:8px;border-radius:50%;flex:0 0 8px;background:#c8c5b8}.building-dot.teaching,.standalone-legend i.teaching{background:#d9c6a4}.building-dot.library,.standalone-legend i.library{background:#b78b67}.building-dot.sports,.standalone-legend i.sports{background:#d97b5d}.building-dot.dining,.standalone-legend i.dining{background:#d5a54e}.building-dot.residence,.standalone-legend i.residence{background:#aab6c3}.route-selector{padding:14px 18px 17px;background:#f3f5ef;border-top:1px solid #dfe5df}.route-selector p{font-size:10px;font-weight:600;margin:0 0 10px;display:flex;align-items:center;gap:6px;color:var(--green)}
 .route-cards{display:flex;flex-direction:column;gap:8px;max-height:320px;overflow-y:auto;overflow-x:hidden}
 .route-cards::-webkit-scrollbar{width:4px}
 .route-cards::-webkit-scrollbar-thumb{background:#cad3ce;border-radius:2px}
@@ -329,4 +329,138 @@
   .map-view-switch { margin-right: 8px; }
   .map-view-switch a { min-width: 40px; padding: 0 9px; font-size: 0; }
   .map-view-switch a svg { width: 16px; height: 16px; }
+}
+
+/* ==========================================================================
+   Building Marker Capsules & Adaptive Map Labels
+   ========================================================================== */
+
+/* Define variables for categories */
+.building-marker-capsule.teaching { --cat-color: #d9c6a4; --cat-text: #6b5c43; }
+.building-marker-capsule.library { --cat-color: #b78b67; --cat-text: #593f2a; }
+.building-marker-capsule.sports { --cat-color: #d97b5d; --cat-text: #703320; }
+.building-marker-capsule.dining { --cat-color: #d5a54e; --cat-text: #664913; }
+.building-marker-capsule.residence { --cat-color: #aab6c3; --cat-text: #414f5c; }
+.building-marker-capsule.service { --cat-color: #c8c5b8; --cat-text: #54524c; }
+
+.building-marker-capsule {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  background: rgba(255, 255, 255, 0.94);
+  backdrop-filter: blur(8px);
+  border: 1px solid rgba(22, 65, 58, 0.15);
+  padding: 3px 8px 3px 4px;
+  border-radius: 20px;
+  box-shadow: 0 3px 10px rgba(22, 65, 58, 0.08);
+  transform: translate(-50%, -50%);
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  pointer-events: auto;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.building-marker-capsule:hover {
+  transform: translate(-50%, -55%) scale(1.03);
+  background: #ffffff;
+  border-color: var(--cat-color);
+  box-shadow: 0 6px 16px rgba(22, 65, 58, 0.15);
+  z-index: 1000 !important;
+}
+
+.marker-icon-wrapper {
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: var(--cat-color);
+  color: #fff;
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+  transition: transform 0.25s ease;
+}
+
+.building-marker-capsule:hover .marker-icon-wrapper {
+  transform: rotate(15deg) scale(1.05);
+}
+
+.marker-title {
+  font-size: 10px;
+  font-weight: 600;
+  color: #1a332f;
+  letter-spacing: 0.02em;
+}
+
+/* ==========================================================================
+   Zoom Level Responsive Display (Zoom Adaptive Control)
+   ========================================================================== */
+
+/* Low Zoom levels: Show only a small color dot to keep map clean */
+.zoom-11 .building-marker-capsule,
+.zoom-12 .building-marker-capsule,
+.zoom-13 .building-marker-capsule,
+.zoom-14 .building-marker-capsule,
+.zoom-15 .building-marker-capsule,
+.zoom-16 .building-marker-capsule {
+  padding: 0;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  border: 1.5px solid #fff;
+  background: var(--cat-color);
+  box-shadow: 0 2px 6px rgba(22, 65, 58, 0.2);
+}
+
+.zoom-11 .marker-icon-wrapper,
+.zoom-12 .marker-icon-wrapper,
+.zoom-13 .marker-icon-wrapper,
+.zoom-14 .marker-icon-wrapper,
+.zoom-15 .marker-icon-wrapper,
+.zoom-16 .marker-icon-wrapper,
+.zoom-11 .marker-title,
+.zoom-12 .marker-title,
+.zoom-13 .marker-title,
+.zoom-14 .marker-title,
+.zoom-15 .marker-title,
+.zoom-16 .marker-title {
+  display: none !important;
+}
+
+/* Low Zoom Hover: Reveal full capsule when hovered */
+.zoom-11 .building-marker-capsule:hover,
+.zoom-12 .building-marker-capsule:hover,
+.zoom-13 .building-marker-capsule:hover,
+.zoom-14 .building-marker-capsule:hover,
+.zoom-15 .building-marker-capsule:hover,
+.zoom-16 .building-marker-capsule:hover {
+  width: auto;
+  height: auto;
+  padding: 3px 8px 3px 4px;
+  border-radius: 20px;
+  border: 1px solid rgba(22, 65, 58, 0.15);
+  background: rgba(255, 255, 255, 0.94);
+}
+
+.zoom-11 .building-marker-capsule:hover .marker-icon-wrapper,
+.zoom-12 .building-marker-capsule:hover .marker-icon-wrapper,
+.zoom-13 .building-marker-capsule:hover .marker-icon-wrapper,
+.zoom-14 .building-marker-capsule:hover .marker-icon-wrapper,
+.zoom-15 .building-marker-capsule:hover .marker-icon-wrapper,
+.zoom-16 .building-marker-capsule:hover .marker-icon-wrapper,
+.zoom-11 .building-marker-capsule:hover .marker-title,
+.zoom-12 .building-marker-capsule:hover .marker-title,
+.zoom-13 .building-marker-capsule:hover .marker-title,
+.zoom-14 .building-marker-capsule:hover .marker-title,
+.zoom-15 .building-marker-capsule:hover .marker-title,
+.zoom-16 .building-marker-capsule:hover .marker-title {
+  display: grid !important;
+}
+
+.zoom-11 .building-marker-capsule:hover .marker-title,
+.zoom-12 .building-marker-capsule:hover .marker-title,
+.zoom-13 .building-marker-capsule:hover .marker-title,
+.zoom-14 .building-marker-capsule:hover .marker-title,
+.zoom-15 .building-marker-capsule:hover .marker-title,
+.zoom-16 .building-marker-capsule:hover .marker-title {
+  display: inline !important;
 }

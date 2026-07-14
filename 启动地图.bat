@@ -8,7 +8,7 @@ cd /d "%~dp0"
 set "HOST=127.0.0.1"
 set "PORT=5173"
 set "PAGE=http://%HOST%:%PORT%/map.html"
-set "LOG_FILE=%~dp0.vite.log"
+set "LOG_FILE=.vite.log"
 
 where npm >nul 2>&1
 if errorlevel 1 (
@@ -31,7 +31,7 @@ rem 如果 5173 尚未监听，则在后台启动 Vite 开发服务器
 powershell -NoProfile -Command "if (Get-NetTCPConnection -LocalPort %PORT% -State Listen -ErrorAction SilentlyContinue) { exit 0 } else { exit 1 }" >nul 2>&1
 if errorlevel 1 (
     echo [提示] 正在启动校园地图服务……
-    start "湖南师大校园地图服务" /min cmd /c "cd /d ""%~dp0"" ^&^& npm run dev -- --host %HOST% --port %PORT% --strictPort ^> ""%LOG_FILE%"" 2^>^&1"
+    start "湖南师大校园地图服务" /min cmd /c "npx vite --host %HOST% --port %PORT% --strictPort ^> .vite.log 2^>^&1"
 )
 
 rem 最多等待 20 秒，确认页面可以访问

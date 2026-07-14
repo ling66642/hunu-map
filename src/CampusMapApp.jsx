@@ -21,6 +21,36 @@ const routeStopDetails = {
     eyebrow: '书香地标 · 图书文化',
     description: '从路线的第一站开始，在林荫与书香之间认识二里半校区。照片卡片会跟随路线节点，为每一站补充更直观的校园印象。',
     tags: ['校园地标', '图书文化', '推荐拍照点']
+  },
+  '学生活动中心': {
+    image: '/images/buildings/student-center.jpg',
+    eyebrow: '青年汇聚 · 青春活力',
+    description: '学生活动中心位于江边的励德楼内。这里是校内最大的活动场地，为文艺比赛、培训讲堂、职场招聘、会议展览、晚会典礼等各类文娱活动提供场地和技术支持。',
+    tags: ['青年汇聚', '文化交流', '活动大厅']
+  },
+  '中和楼': {
+    image: '/images/buildings/zhonghe-building.jpg',
+    eyebrow: '历史见证 · 学术积淀',
+    description: '中和楼是标志性建筑之一，原名天文台。建有40公分折反式天文望远镜和大型全可动式穹顶，高精度自动跟踪观测天体，是目前中南地区规格最高，功能最强的天文馆。',
+    tags: ['标志建筑', '师大天文馆', '天眼观测']
+  },
+  '外国语学院': {
+    image: '/images/buildings/foreign-languages.jpg',
+    eyebrow: '中西交融 · 语言摇篮',
+    description: '外国语学院始建于1938年，位于腾龙楼。2017年和2022年，外国语言文学两次入选国家“世界一流”建设学科，是湖南省属高校唯一进入国家“双一流”建设的学科。',
+    tags: ['世界一流', '外国语言文学', '腾龙楼']
+  },
+  '文渊楼': {
+    image: '/images/buildings/wenyuan-building.jpg',
+    eyebrow: '学术殿堂 · 严谨求实',
+    description: '文渊楼是文学院与历史文化学院所在地。建筑红墙黛瓦，古木掩映，富有幽静的诗意。其入口处有一副由名家撰联书写的黑花岗岩底鎏金楹联。',
+    tags: ['红墙黛瓦', '人文底蕴', '古木掩映']
+  },
+  '经纬楼': {
+    image: '/images/buildings/jingwei-building.jpg',
+    eyebrow: '经天纬地 · 地理学科',
+    description: '经纬楼是地理科学学院的教学楼。学院实力雄厚，地理学科是湖南省“十四五”重点学科，在教育部第五轮学科评估中位居全国前列。',
+    tags: ['国家一流专业', '重点实验室', '科研殿堂']
   }
 };
 
@@ -189,7 +219,7 @@ export default function CampusMapApp(){
 
   return <div className="standalone-map-app">
     <header className="map-topbar">
-      <a className="map-brand" href="/"><span className="map-seal">师</span><span><strong>湖南师范大学</strong><small>二里半校园地图</small></span></a>
+      <a className="map-brand" href="/"><img src="/images/师大校徽.webp" alt="湖南师范大学校徽" className="map-seal" /><span><strong>湖南师范大学</strong><small>二里半校园地图</small></span></a>
       <div className="map-top-title"><MapPin size={16}/><span>二里半校区</span><em>75栋建筑 · 专属矢量底图</em></div>
       <nav className="map-view-switch" aria-label="地图模式切换"><a className="active" href="/map.html"><MapPin size={14}/>交互地图</a><a href="/poster.html"><Camera size={14}/>静态成图</a></nav>
       <a className="back-home" href="/"><ChevronLeft size={17}/>返回导览首页</a>
