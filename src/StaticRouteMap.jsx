@@ -515,6 +515,14 @@ const StaticRouteMap = forwardRef(function StaticRouteMap({ datasets, modelReady
         </filter>
         <clipPath id="campusClip"><path d={boundaryPath} /></clipPath>
         <clipPath id="photoClip"><rect x="5" y="5" width="150" height="95" rx="4" /></clipPath>
+        <mask id="photoSoftEdge">
+          <rect x="0" y="0" width="160" height="130" rx="7" fill="white" />
+          <rect x="5" y="5" width="150" height="95" rx="4" fill="white" opacity="0.15" />
+        </mask>
+        <linearGradient id="photoBorderFade" x1="0" y1="0" x2="1" y2="1">
+          <stop offset="0" stopColor="#d8d0bf" stopOpacity="0.25" />
+          <stop offset="1" stopColor="#d8d0bf" stopOpacity="0.65" />
+        </linearGradient>
         <marker id="routeArrow" markerWidth="9" markerHeight="9" refX="7.5" refY="4.5" orient="auto" markerUnits="userSpaceOnUse">
           <path d="M0.8,0.8 L8.2,4.5 L0.8,8.2 Z" fill={route.color} stroke="#fffaf3" strokeWidth="0.8" />
         </marker>
@@ -628,11 +636,11 @@ const StaticRouteMap = forwardRef(function StaticRouteMap({ datasets, modelReady
             strokeDasharray="4 3"
             opacity="0.8"
           />
-          {/* 图片卡片 */}
-          <g transform="translate(760 280)">
-            <rect width="160" height="130" rx="7" fill="#fffdf7" stroke="#d8d0bf" strokeWidth="1.5" />
-            <image href="/images/road_bg.jpg" x="5" y="5" width="150" height="95" preserveAspectRatio="xMidYMid slice" clipPath="url(#photoClip)" />
-            <rect x="5" y="100" width="150" height="25" rx="0" fill="#f8f4e9" />
+          {/* 图片卡片：半透明边框，轻量填充，便于融入地图空白处 */}
+          <g transform="translate(760 280)" mask="url(#photoSoftEdge)">
+            <rect width="160" height="130" rx="7" fill="#fffdf7" fillOpacity="0.78" stroke="url(#photoBorderFade)" strokeWidth="2" />
+            <image href="/images/road_bg.jpg" x="5" y="5" width="150" height="95" preserveAspectRatio="xMidYMid slice" clipPath="url(#photoClip)" opacity="0.92" />
+            <rect x="5" y="100" width="150" height="25" rx="0" fill="#f8f4e9" fillOpacity="0.8" />
             <text x="80" y="117" textAnchor="middle" className="map-note" style={{ fontSize: '10px', letterSpacing: '0.5px' }}>法桐大道（途经点 5—6）</text>
           </g>
         </g>
