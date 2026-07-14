@@ -505,6 +505,7 @@ const StaticRouteMap = forwardRef(function StaticRouteMap({ datasets, modelReady
           <feGaussianBlur stdDeviation="6" />
         </filter>
         <clipPath id="campusClip"><path d={boundaryPath} /></clipPath>
+        <clipPath id="photoClip"><rect x="6" y="6" width="188" height="128" rx="4" /></clipPath>
         <marker id="routeArrow" markerWidth="9" markerHeight="9" refX="7.5" refY="4.5" orient="auto" markerUnits="userSpaceOnUse">
           <path d="M0.8,0.8 L8.2,4.5 L0.8,8.2 Z" fill={route.color} stroke="#fffaf3" strokeWidth="0.8" />
         </marker>
@@ -557,19 +558,6 @@ const StaticRouteMap = forwardRef(function StaticRouteMap({ datasets, modelReady
       </g>
 
       <g clipPath="url(#campusClip)">
-        {/* 校园风景底图：路线A 5-6 之间的法桐大道林荫路照片，作为半透明背景叠加在校园地图上。 */}
-        <image
-          href="/images/road_bg.jpg"
-          x={MAP_BOX.x}
-          y={MAP_BOX.y}
-          width={MAP_BOX.width}
-          height={MAP_BOX.height}
-          preserveAspectRatio="xMidYMid slice"
-          opacity="0.32"
-        />
-      </g>
-
-      <g clipPath="url(#campusClip)">
         <g className="water-layer">
           {water.features.map((feature, index) => <path key={index} d={geometryPath(feature.geometry, project)} fill="#b9d8d6" stroke="#99c5c3" strokeWidth="1.5" fillRule="evenodd" />)}
         </g>
@@ -617,6 +605,14 @@ const StaticRouteMap = forwardRef(function StaticRouteMap({ datasets, modelReady
       ))}
 
       {route.id !== 'none' && <RouteEndpoints route={route} project={project} />}
+
+      {/* 校园实景插图：路线A 5(文渊楼)与6(经纬楼)之间的法桐大道秋景 */}
+      <g transform="translate(1060 720)" filter="url(#softShadow)">
+        <rect width="200" height="168" rx="8" fill="#fffdf7" stroke="#d8d0bf" strokeWidth="1.5" />
+        <image href="/images/road_bg.jpg" x="6" y="6" width="188" height="128" preserveAspectRatio="xMidYMid slice" clipPath="url(#photoClip)" />
+        <rect x="6" y="134" width="188" height="28" rx="0" fill="#f8f4e9" />
+        <text x="100" y="152" textAnchor="middle" className="map-note" style={{ fontSize: '11px', letterSpacing: '1px' }}>法桐大道 · 文渊楼—经纬楼</text>
+      </g>
 
       <g transform="translate(338 966)">
         <rect width={route.id === 'none' ? 650 : 750} height="43" rx="7" fill="#f8f4e9" stroke="#d7cfbe" />
