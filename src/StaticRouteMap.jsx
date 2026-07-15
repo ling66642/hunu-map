@@ -499,6 +499,12 @@ const StaticRouteMap = forwardRef(function StaticRouteMap({ datasets, modelReady
   const stopAnchors = useMemo(() => getStopAnchors(route, buildings.features, project), [route, buildings, project]);
   const callouts = useMemo(() => arrangeCallouts(stopAnchors), [stopAnchors]);
   const activeRoutePath = useMemo(() => routePath(route, project), [route, project]);
+  const photoRoutePoint = useMemo(() => {
+    if (route.id !== 'routeA' || route.coordinates.length < 2) return null;
+    const a = project([route.coordinates[route.coordinates.length - 2][1], route.coordinates[route.coordinates.length - 2][0]]); // 经纬楼
+    const b = project([route.coordinates[route.coordinates.length - 1][1], route.coordinates[route.coordinates.length - 1][0]]); // 终点
+    return [(a[0] + b[0]) / 2, (a[1] + b[1]) / 2];
+  }, [route, project]);
   const modelAnchors = useMemo(() => buildings.features.map((feature, index) => ({
     id: String(index + 1),
     point: project(featureCenter(feature)),
@@ -541,6 +547,7 @@ const StaticRouteMap = forwardRef(function StaticRouteMap({ datasets, modelReady
           <feGaussianBlur stdDeviation="6" />
         </filter>
         <clipPath id="campusClip"><path d={boundaryPath} /></clipPath>
+        <clipPath id="photoClip"><rect x="5" y="5" width="150" height="95" rx="4" /></clipPath>
         <marker id="routeArrow" markerWidth="9" markerHeight="9" refX="7.5" refY="4.5" orient="auto" markerUnits="userSpaceOnUse">
           <path d="M0.8,0.8 L8.2,4.5 L0.8,8.2 Z" fill={route.color} stroke="#fffaf3" strokeWidth="0.8" />
         </marker>
@@ -640,6 +647,27 @@ const StaticRouteMap = forwardRef(function StaticRouteMap({ datasets, modelReady
       ))}
 
       {route.id !== 'none' && <RouteEndpoints route={route} project={project} />}
+
+      {/* 校园实景插图：路线A 终点前路段（经纬楼 → 终点）法桐大道秋景
+          引线从路线线上直接引出，无浮空圆点 */}
+      {route.id === 'routeA' && photoRoutePoint && (
+        <g filter="url(#softShadow)">
+          <polyline
+            points={`${photoRoutePoint[0]},${photoRoutePoint[1]} ${photoRoutePoint[0]},${photoRoutePoint[1] - 45} 760,360`}
+            fill="none"
+            stroke={route.color}
+            strokeWidth="2"
+            strokeDasharray="4 3"
+            opacity="0.8"
+          />
+          <g transform="translate(760 280)">
+            <rect width="160" height="130" rx="7" fill="#fffdf7" stroke="#d8d0bf" strokeWidth="1.5" />
+            <image href="/images/road_bg.jpg" x="5" y="5" width="150" height="95" preserveAspectRatio="xMidYMid slice" clipPath="url(#photoClip)" />
+            <rect x="5" y="100" width="150" height="25" rx="0" fill="#f8f4e9" />
+            <text x="80" y="117" textAnchor="middle" className="map-note" style={{ fontSize: '10px', letterSpacing: '0.5px' }}>法桐大道（终点前）</text>
+          </g>
+        </g>
+      )}
 
       <g transform="translate(338 966)">
         <rect width={route.id === 'none' ? 650 : 750} height="43" rx="7" fill="#f8f4e9" fillOpacity={route.id === 'routeA' ? 0.78 : 1} stroke="#d7cfbe" />
