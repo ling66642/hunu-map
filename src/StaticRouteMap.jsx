@@ -562,51 +562,10 @@ const StaticRouteMap = forwardRef(function StaticRouteMap({ datasets, modelReady
           .map-note { font-size: 11px; letter-spacing: 1.5px; fill: #758078; }
           .route-meta { font-size: 13px; font-weight: 700; letter-spacing: 1px; fill: #4c5e58; }
         `}</style>
-        <linearGradient id="cornerFade" x1="0" y1="0" x2="1" y2="1">
-          <stop offset="0" stopColor="#ffffff" />
-          <stop offset="0.5" stopColor="#c4c4c4" />
-          <stop offset="1" stopColor="#000000" />
-        </linearGradient>
-        <linearGradient id="cornerFadeReverse" x1="1" y1="1" x2="0" y2="0">
-          <stop offset="0" stopColor="#ffffff" />
-          <stop offset="0.5" stopColor="#c4c4c4" />
-          <stop offset="1" stopColor="#000000" />
-        </linearGradient>
-        <mask id="cornerFadeMask" maskUnits="userSpaceOnUse" x="0" y="0" width={SVG_WIDTH * 0.62} height={SVG_HEIGHT * 0.62}>
-          <rect x="0" y="0" width={SVG_WIDTH * 0.62} height={SVG_HEIGHT * 0.62} fill="url(#cornerFade)" />
-        </mask>
-        <mask id="cornerFadeMaskReverse" maskUnits="userSpaceOnUse" x={SVG_WIDTH * 0.38} y={SVG_HEIGHT * 0.38} width={SVG_WIDTH * 0.62} height={SVG_HEIGHT * 0.62}>
-          <rect x={SVG_WIDTH * 0.38} y={SVG_HEIGHT * 0.38} width={SVG_WIDTH * 0.62} height={SVG_HEIGHT * 0.62} fill="url(#cornerFadeReverse)" />
-        </mask>
       </defs>
 
       <rect width={SVG_WIDTH} height={SVG_HEIGHT} fill="url(#paperGradient)" />
       <rect width={SVG_WIDTH} height={SVG_HEIGHT} fill="url(#paperNoise)" />
-      {/* 校门双图背景：左上、右下各一张，中间透明过渡融合 */}
-      {route.id === 'routeA' && (
-        <g className="route-background-layer">
-          <image
-            href="/images/school_gate_left.jpg"
-            x="0"
-            y="0"
-            width={SVG_WIDTH * 0.62}
-            height={SVG_HEIGHT * 0.62}
-            preserveAspectRatio="xMidYMid slice"
-            opacity="0.45"
-            mask="url(#cornerFadeMask)"
-          />
-          <image
-            href="/images/campus_gate_right.jpg"
-            x={SVG_WIDTH * 0.38}
-            y={SVG_HEIGHT * 0.38}
-            width={SVG_WIDTH * 0.62}
-            height={SVG_HEIGHT * 0.62}
-            preserveAspectRatio="xMidYMid slice"
-            opacity="0.45"
-            mask="url(#cornerFadeMaskReverse)"
-          />
-        </g>
-      )}
       <path d="M28 28 H1572 V1072 H28 Z" fill="none" stroke="#b9ad94" strokeWidth="1.4" />
       <path d="M42 42 H1558 V1058 H42 Z" fill="none" stroke="#d6cdbb" strokeWidth="0.8" />
 
