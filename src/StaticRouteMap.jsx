@@ -562,10 +562,31 @@ const StaticRouteMap = forwardRef(function StaticRouteMap({ datasets, modelReady
           .map-note { font-size: 11px; letter-spacing: 1.5px; fill: #758078; }
           .route-meta { font-size: 13px; font-weight: 700; letter-spacing: 1px; fill: #4c5e58; }
         `}</style>
+        <linearGradient id="cornerFade" x1="0" y1="0" x2="1" y2="1">
+          <stop offset="0" stopColor="#ffffff" />
+          <stop offset="0.5" stopColor="#c4c4c4" />
+          <stop offset="1" stopColor="#000000" />
+        </linearGradient>
+        <mask id="cornerFadeMask" maskUnits="userSpaceOnUse" x="0" y="0" width={SVG_WIDTH * 0.56} height={SVG_HEIGHT * 0.52}>
+          <rect x="0" y="0" width={SVG_WIDTH * 0.56} height={SVG_HEIGHT * 0.52} fill="url(#cornerFade)" />
+        </mask>
       </defs>
 
       <rect width={SVG_WIDTH} height={SVG_HEIGHT} fill="url(#paperGradient)" />
       <rect width={SVG_WIDTH} height={SVG_HEIGHT} fill="url(#paperNoise)" />
+      {/* 校门照片：左上角半透明水印，依地图尺寸自动缩小，向右下渐隐 */}
+      {route.id === 'routeA' && (
+        <image
+          href="/images/school_gate.jpg"
+          x="0"
+          y="0"
+          width={SVG_WIDTH * 0.56}
+          height={SVG_HEIGHT * 0.52}
+          preserveAspectRatio="xMidYMid slice"
+          opacity="0.5"
+          mask="url(#cornerFadeMask)"
+        />
+      )}
       <path d="M28 28 H1572 V1072 H28 Z" fill="none" stroke="#b9ad94" strokeWidth="1.4" />
       <path d="M42 42 H1558 V1058 H42 Z" fill="none" stroke="#d6cdbb" strokeWidth="0.8" />
 
