@@ -676,18 +676,18 @@ const StaticRouteMap = forwardRef(function StaticRouteMap({ datasets, modelReady
       )}
 
       {/* 校园实景插图：路线A 途经点2—3路段（学生活动中心 → 中和楼）春日街景
-          引线从路线线上直接引出，无浮空圆点 */}
+          引线从2-3连接线中点垂直上引至地图右上空白区，图片不压任何地图要素 */}
       {route.id === 'routeA' && photoRoutePoint23 && (
         <g filter="url(#softShadow)">
           <polyline
-            points={`${photoRoutePoint23[0]},${photoRoutePoint23[1]} ${photoRoutePoint23[0]},${photoRoutePoint23[1] + 35} 1000,685`}
+            points={`${photoRoutePoint23[0]},${photoRoutePoint23[1]} ${photoRoutePoint23[0]},425 1240,425`}
             fill="none"
             stroke={route.color}
             strokeWidth="2"
             strokeDasharray="4 3"
             opacity="0.8"
           />
-          <g transform="translate(1000 620)">
+          <g transform="translate(1240 360)">
             <rect width="160" height="130" rx="7" fill="#fffdf7" stroke="#d8d0bf" strokeWidth="1.5" />
             <image href="/images/street_spring.jpg" x="5" y="5" width="150" height="95" preserveAspectRatio="xMidYMid slice" clipPath="url(#photoClip)" />
             <rect x="5" y="100" width="150" height="25" rx="0" fill="#f8f4e9" />
