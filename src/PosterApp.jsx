@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
-import { ChevronLeft, ChevronRight, Crosshair, Download, FileCode2, Map, Printer, RotateCcw, Route as RouteIcon } from 'lucide-react';
+import { Check, ChevronLeft, ChevronRight, Crosshair, Download, FileCode2, Map, Printer, RotateCcw, Route as RouteIcon } from 'lucide-react';
 import StaticRouteMap from './StaticRouteMap';
 import { routes } from './data/routes';
 
@@ -13,6 +13,37 @@ const datasetFiles = [
 function fileName(route, extension) {
   const routeName = route.id === 'none' ? '校园总览' : route.posterTitle;
   return `湖南师范大学二里半校区_${routeName}.${extension}`;
+}
+
+// 自定义照片引用点持久化（按路线分开存储于 localStorage）
+const ANCHOR_STORAGE_KEY = 'hunu-map:photo-anchors';
+
+function hasAnchor(anchors) {
+  return !!(anchors && (anchors.card1 || anchors.card2));
+}
+
+function loadStoredAnchors(routeId) {
+  try {
+    const raw = localStorage.getItem(ANCHOR_STORAGE_KEY);
+    if (!raw) return null;
+    const all = JSON.parse(raw);
+    const anchors = all?.[routeId];
+    return hasAnchor(anchors) ? anchors : null;
+  } catch {
+    return null;
+  }
+}
+
+function saveStoredAnchors(routeId, anchors) {
+  try {
+    const raw = localStorage.getItem(ANCHOR_STORAGE_KEY);
+    const all = raw ? JSON.parse(raw) : {};
+    if (hasAnchor(anchors)) all[routeId] = anchors;
+    else delete all[routeId];
+    localStorage.setItem(ANCHOR_STORAGE_KEY, JSON.stringify(all));
+  } catch {
+    /* localStorage 不可用时静默降级 */
+  }
 }
 
 function downloadBlob(blob, name) {
@@ -69,7 +100,9 @@ export default function PosterApp() {
   });
   // 照片引用点编辑：开启后可在地图上拖动手柄自定义引线起点（仅路线A有实景照片）
   const [photoEdit, setPhotoEdit] = useState(false);
-  const [photoAnchors, setPhotoAnchors] = useState(null);
+  const [photoAnchors, setPhotoAnchors] = useState(() => loadStoredAnchors(activeRouteId));
+  // 已落盘的锚点快照，用于判断当前编辑是否有未保存改动
+  const [savedAnchors, setSavedAnchors] = useState(() => loadStoredAnchors(activeRouteId));
 
   const activeRoute = useMemo(
     () => routes.find((route) => route.id === activeRouteId) || routes[1],
@@ -104,10 +137,34 @@ export default function PosterApp() {
   }, [activeRoute.id]);
 
   const selectRoute = (routeId) => {
+    const stored = loadStoredAnchors(routeId);
     setActiveRouteId(routeId);
     setNotice('');
     setPhotoEdit(false);
+    setPhotoAnchors(stored);
+    setSavedAnchors(stored);
+  };
+
+  const savePhotoAnchors = () => {
+    saveStoredAnchors(activeRoute.id, photoAnchors);
+    setSavedAnchors(photoAnchors);
+    setPhotoEdit(false);
+    setNotice(hasAnchor(photoAnchors)
+      ? '照片引用点已保存，下次打开或切换回本路线将自动应用当前设置。'
+      : '照片引用点已恢复为自动中点并保存。');
+  };
+
+  const cancelPhotoEdit = () => {
+    setPhotoAnchors(savedAnchors);
+    setPhotoEdit(false);
+    setNotice('已取消本次编辑，恢复到上次保存的引用点。');
+  };
+
+  const resetPhotoAnchors = () => {
     setPhotoAnchors(null);
+    setSavedAnchors(null);
+    saveStoredAnchors(activeRoute.id, null);
+    setNotice('照片引用点已重置为自动中点。');
   };
 
   const changeRoute = (step) => {
@@ -177,19 +234,48 @@ export default function PosterApp() {
         <div className="poster-toolbar-actions">
           {activeRoute.id === 'routeA' && (
             <>
-              <button
-                type="button"
-                className={photoEdit ? 'active' : ''}
-                style={photoEdit ? { background: activeRoute.color, color: '#fff', borderColor: activeRoute.color } : undefined}
-                onClick={() => { setPhotoEdit((v) => !v); setNotice(photoEdit ? '' : '已开启引用点编辑：拖动地图上的圆点即可自定义照片引线起点；完成后关闭再导出。'); }}
-                title="开启后可拖动地图上的圆点，自定义照片引线的起点位置"
-              >
-                <Crosshair size={16} />{photoEdit ? '编辑中…' : '自定义引用点'}
-              </button>
-              {photoAnchors && (photoAnchors.card1 || photoAnchors.card2) && (
-                <button type="button" onClick={() => { setPhotoAnchors(null); setNotice('照片引用点已重置为自动中点。'); }} title="清除自定义引用点，恢复自动中点">
-                  <RotateCcw size={16} />重置引用点
-                </button>
+              {!photoEdit ? (
+                <>
+                  <button
+                    type="button"
+                    onClick={() => { setPhotoEdit(true); setNotice('已开启引用点编辑：拖动地图上的圆点即可自定义照片引线起点，完成后点击「保存编辑」。'); }}
+                    title="开启后可拖动地图上的圆点，自定义照片引线的起点位置"
+                  >
+                    <Crosshair size={16} />自定义引用点
+                  </button>
+                  {hasAnchor(photoAnchors) && (
+                    <button type="button" onClick={resetPhotoAnchors} title="清除已保存的自定义引用点，恢复自动中点">
+                      <RotateCcw size={16} />重置引用点
+                    </button>
+                  )}
+                </>
+              ) : (
+                <>
+                  <button
+                    type="button"
+                    className="active"
+                    style={{ background: activeRoute.color, color: '#fff', borderColor: activeRoute.color }}
+                    disabled
+                    title="编辑中：拖动地图上的圆点调整引线起点"
+                  >
+                    <Crosshair size={16} />编辑中…
+                  </button>
+                  <button
+                    type="button"
+                    className="primary"
+                    onClick={savePhotoAnchors}
+                    title="保存当前编辑的引用点（持久化到浏览器本地，刷新或切换路线后仍然生效）"
+                  >
+                    <Check size={16} />保存编辑
+                  </button>
+                  <button
+                    type="button"
+                    onClick={cancelPhotoEdit}
+                    title="放弃本次编辑，恢复到上次保存的引用点"
+                  >
+                    取消
+                  </button>
+                </>
               )}
             </>
           )}
