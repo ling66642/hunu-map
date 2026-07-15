@@ -505,6 +505,12 @@ const StaticRouteMap = forwardRef(function StaticRouteMap({ datasets, modelReady
     const b = project([route.coordinates[route.coordinates.length - 1][1], route.coordinates[route.coordinates.length - 1][0]]); // 终点
     return [(a[0] + b[0]) / 2, (a[1] + b[1]) / 2];
   }, [route, project]);
+  const photoRoutePoint23 = useMemo(() => {
+    if (route.id !== 'routeA' || route.coordinates.length < 3) return null;
+    const a = project([route.coordinates[1][1], route.coordinates[1][0]]); // 学生活动中心
+    const b = project([route.coordinates[2][1], route.coordinates[2][0]]); // 中和楼
+    return [(a[0] + b[0]) / 2, (a[1] + b[1]) / 2];
+  }, [route, project]);
   const modelAnchors = useMemo(() => buildings.features.map((feature, index) => ({
     id: String(index + 1),
     point: project(featureCenter(feature)),
@@ -665,6 +671,27 @@ const StaticRouteMap = forwardRef(function StaticRouteMap({ datasets, modelReady
             <image href="/images/road_bg.jpg" x="5" y="5" width="150" height="95" preserveAspectRatio="xMidYMid slice" clipPath="url(#photoClip)" />
             <rect x="5" y="100" width="150" height="25" rx="0" fill="#f8f4e9" />
             <text x="80" y="117" textAnchor="middle" className="map-note" style={{ fontSize: '10px', letterSpacing: '0.5px' }}>法桐大道（终点前）</text>
+          </g>
+        </g>
+      )}
+
+      {/* 校园实景插图：路线A 途经点2—3路段（学生活动中心 → 中和楼）春日街景
+          引线从路线线上直接引出，无浮空圆点 */}
+      {route.id === 'routeA' && photoRoutePoint23 && (
+        <g filter="url(#softShadow)">
+          <polyline
+            points={`${photoRoutePoint23[0]},${photoRoutePoint23[1]} ${photoRoutePoint23[0]},${photoRoutePoint23[1] + 35} 1000,685`}
+            fill="none"
+            stroke={route.color}
+            strokeWidth="2"
+            strokeDasharray="4 3"
+            opacity="0.8"
+          />
+          <g transform="translate(1000 620)">
+            <rect width="160" height="130" rx="7" fill="#fffdf7" stroke="#d8d0bf" strokeWidth="1.5" />
+            <image href="/images/street_spring.jpg" x="5" y="5" width="150" height="95" preserveAspectRatio="xMidYMid slice" clipPath="url(#photoClip)" />
+            <rect x="5" y="100" width="150" height="25" rx="0" fill="#f8f4e9" />
+            <text x="80" y="117" textAnchor="middle" className="map-note" style={{ fontSize: '10px', letterSpacing: '0.5px' }}>中和楼前（途经点 2—3）</text>
           </g>
         </g>
       )}
