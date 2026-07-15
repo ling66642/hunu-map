@@ -1,5 +1,14 @@
-import React, { forwardRef, useMemo } from 'react';
+import React, { forwardRef, useMemo, useRef, useState } from 'react';
 import RouteModelLayer from './RouteModelLayer';
+
+function mergeRefs(...refs) {
+  return (node) => {
+    refs.forEach((ref) => {
+      if (typeof ref === 'function') ref(node);
+      else if (ref) ref.current = node;
+    });
+  };
+}
 
 const SVG_WIDTH = 1600;
 const SVG_HEIGHT = 1100;
@@ -491,7 +500,7 @@ function RouteCallouts({ callouts, route }) {
   );
 }
 
-const StaticRouteMap = forwardRef(function StaticRouteMap({ datasets, modelReady, onModelReadyChange, route }, ref) {
+const StaticRouteMap = forwardRef(function StaticRouteMap({ datasets, modelReady, onModelReadyChange, route, photoEdit, photoAnchors, onPhotoAnchorChange }, ref) {
   const { boundary, buildings, roads, water } = datasets;
   const bounds = useMemo(() => getBounds(boundary), [boundary]);
   const project = useMemo(() => createProjection(bounds), [bounds]);
@@ -511,6 +520,53 @@ const StaticRouteMap = forwardRef(function StaticRouteMap({ datasets, modelReady
     const b = project([route.coordinates[2][1], route.coordinates[2][0]]); // 中和楼
     return [(a[0] + b[0]) / 2, (a[1] + b[1]) / 2];
   }, [route, project]);
+
+  // 照片引线起点：自定义优先，否则用自动中点
+  const photoAnchor1 = photoAnchors?.card1 ?? photoRoutePoint;
+  const photoAnchor2 = photoAnchors?.card2 ?? photoRoutePoint23;
+
+  // 可拖动引用点手柄
+  const svgElRef = useRef(null);
+  const dragRef = useRef(null);
+  const clientToSvg = (clientX, clientY) => {
+    const svg = svgElRef.current;
+    if (!svg) return null;
+    const ctm = svg.getScreenCTM();
+    if (!ctm) return null;
+    const pt = svg.createSVGPoint();
+    pt.x = clientX;
+    pt.y = clientY;
+    return pt.matrixTransform(ctm.inverse());
+  };
+  const onHandleDown = (card, event) => {
+    event.stopPropagation();
+    event.preventDefault();
+    const svg = svgElRef.current;
+    if (svg && svg.setPointerCapture) {
+      try { svg.setPointerCapture(event.pointerId); } catch (_) { /* noop */ }
+    }
+    dragRef.current = { card, pointerId: event.pointerId };
+  };
+  const onSvgMove = (event) => {
+    const drag = dragRef.current;
+    if (!drag || !onPhotoAnchorChange) return;
+    const p = clientToSvg(event.clientX, event.clientY);
+    if (!p) return;
+    const next = { ...(photoAnchors || {}) };
+    next[drag.card] = [Number(p.x.toFixed(1)), Number(p.y.toFixed(1))];
+    onPhotoAnchorChange(next);
+  };
+  const onSvgUp = (event) => {
+    const drag = dragRef.current;
+    if (drag) {
+      const svg = svgElRef.current;
+      if (svg && svg.releasePointerCapture) {
+        try { svg.releasePointerCapture(drag.pointerId); } catch (_) { /* noop */ }
+      }
+    }
+    dragRef.current = null;
+  };
+
   const modelAnchors = useMemo(() => buildings.features.map((feature, index) => ({
     id: String(index + 1),
     point: project(featureCenter(feature)),
@@ -526,12 +582,15 @@ const StaticRouteMap = forwardRef(function StaticRouteMap({ datasets, modelReady
 
   return (
     <svg
-      ref={ref}
+      ref={mergeRefs(ref, svgElRef)}
       className="static-route-map"
       viewBox={`0 0 ${SVG_WIDTH} ${SVG_HEIGHT}`}
       role="img"
       aria-label={`${route.posterTitle}静态校园地图`}
       xmlns="http://www.w3.org/2000/svg"
+      onPointerMove={photoEdit ? onSvgMove : undefined}
+      onPointerUp={photoEdit ? onSvgUp : undefined}
+      style={photoEdit ? { cursor: 'crosshair' } : undefined}
     >
       <defs>
         <linearGradient id="paperGradient" x1="0" y1="0" x2="1" y2="1">
@@ -655,11 +714,11 @@ const StaticRouteMap = forwardRef(function StaticRouteMap({ datasets, modelReady
       {route.id !== 'none' && <RouteEndpoints route={route} project={project} />}
 
       {/* 校园实景插图：路线A 终点前路段（经纬楼 → 终点）法桐大道秋景
-          引线从路线线上直接引出，无浮空圆点 */}
-      {route.id === 'routeA' && photoRoutePoint && (
+          引线从路线线上直接引出，无浮空圆点；编辑模式下可拖动起点 */}
+      {route.id === 'routeA' && photoAnchor1 && (
         <g filter="url(#softShadow)">
           <polyline
-            points={`${photoRoutePoint[0]},${photoRoutePoint[1]} ${photoRoutePoint[0]},${photoRoutePoint[1] - 45} 760,360`}
+            points={`${photoAnchor1[0]},${photoAnchor1[1]} ${photoAnchor1[0]},${photoAnchor1[1] - 45} 760,360`}
             fill="none"
             stroke={route.color}
             strokeWidth="2"
@@ -678,10 +737,10 @@ const StaticRouteMap = forwardRef(function StaticRouteMap({ datasets, modelReady
       {/* 校园实景插图：路线A 途经点2—3路段（学生活动中心 → 中和楼）春日街景
           引线从2-3连接线中点出发（与第一张照片同款折线引线：路线点→垂直拐点→卡片），
           引导至左下空白处插入图片；卡片经脚本核验与所有建筑足迹零相交，不压边框/文字 */}
-      {route.id === 'routeA' && photoRoutePoint23 && (
+      {route.id === 'routeA' && photoAnchor2 && (
         <g filter="url(#softShadow)">
           <polyline
-            points={`${photoRoutePoint23[0]},${photoRoutePoint23[1]} ${photoRoutePoint23[0]},${photoRoutePoint23[1] + 45} 550,815`}
+            points={`${photoAnchor2[0]},${photoAnchor2[1]} ${photoAnchor2[0]},${photoAnchor2[1] + 45} 550,815`}
             fill="none"
             stroke={route.color}
             strokeWidth="2"
@@ -694,6 +753,22 @@ const StaticRouteMap = forwardRef(function StaticRouteMap({ datasets, modelReady
             <rect x="5" y="100" width="150" height="25" rx="0" fill="#f8f4e9" />
             <text x="80" y="117" textAnchor="middle" className="map-note" style={{ fontSize: '10px', letterSpacing: '0.5px' }}>中和楼前（途经点 2—3）</text>
           </g>
+        </g>
+      )}
+
+      {/* 引用点编辑手柄：拖动圆点即可自定义照片引线起点（仅编辑模式，不进入导出） */}
+      {route.id === 'routeA' && photoEdit && photoAnchor1 && (
+        <g className="photo-anchor-handle" style={{ cursor: 'grab' }}>
+          <circle cx={photoAnchor1[0]} cy={photoAnchor1[1]} r="15" fill="#fff" stroke={route.color} strokeWidth="3" opacity="0.95" onPointerDown={(e) => onHandleDown('card1', e)} />
+          <circle cx={photoAnchor1[0]} cy={photoAnchor1[1]} r="5" fill={route.color} pointerEvents="none" />
+          <text x={photoAnchor1[0]} y={photoAnchor1[1] - 22} textAnchor="middle" fontSize="11" fontWeight="700" fill={route.color} pointerEvents="none">拖动改起点</text>
+        </g>
+      )}
+      {route.id === 'routeA' && photoEdit && photoAnchor2 && (
+        <g className="photo-anchor-handle" style={{ cursor: 'grab' }}>
+          <circle cx={photoAnchor2[0]} cy={photoAnchor2[1]} r="15" fill="#fff" stroke={route.color} strokeWidth="3" opacity="0.95" onPointerDown={(e) => onHandleDown('card2', e)} />
+          <circle cx={photoAnchor2[0]} cy={photoAnchor2[1]} r="5" fill={route.color} pointerEvents="none" />
+          <text x={photoAnchor2[0]} y={photoAnchor2[1] - 22} textAnchor="middle" fontSize="11" fontWeight="700" fill={route.color} pointerEvents="none">拖动改起点</text>
         </g>
       )}
 

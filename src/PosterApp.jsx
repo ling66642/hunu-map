@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
-import { ChevronLeft, ChevronRight, Download, FileCode2, Map, Printer, Route as RouteIcon } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Crosshair, Download, FileCode2, Map, Printer, RotateCcw, Route as RouteIcon } from 'lucide-react';
 import StaticRouteMap from './StaticRouteMap';
 import { routes } from './data/routes';
 
@@ -67,6 +67,9 @@ export default function PosterApp() {
     const routeId = new URLSearchParams(window.location.search).get('route');
     return routes.some((route) => route.id === routeId) ? routeId : 'routeA';
   });
+  // 照片引用点编辑：开启后可在地图上拖动手柄自定义引线起点（仅路线A有实景照片）
+  const [photoEdit, setPhotoEdit] = useState(false);
+  const [photoAnchors, setPhotoAnchors] = useState(null);
 
   const activeRoute = useMemo(
     () => routes.find((route) => route.id === activeRouteId) || routes[1],
@@ -103,6 +106,8 @@ export default function PosterApp() {
   const selectRoute = (routeId) => {
     setActiveRouteId(routeId);
     setNotice('');
+    setPhotoEdit(false);
+    setPhotoAnchors(null);
   };
 
   const changeRoute = (step) => {
@@ -170,9 +175,27 @@ export default function PosterApp() {
         </nav>
 
         <div className="poster-toolbar-actions">
-          <button type="button" onClick={exportSvg} disabled={!datasets || !modelReady}><FileCode2 size={16} />下载 SVG</button>
-          <button type="button" className="primary" onClick={exportPng} disabled={!datasets || !modelReady || exporting}><Download size={16} />{exporting ? '生成中…' : '下载高清 PNG'}</button>
-          <button type="button" onClick={() => window.print()} disabled={!datasets || !modelReady}><Printer size={16} />打印</button>
+          {activeRoute.id === 'routeA' && (
+            <>
+              <button
+                type="button"
+                className={photoEdit ? 'active' : ''}
+                style={photoEdit ? { background: activeRoute.color, color: '#fff', borderColor: activeRoute.color } : undefined}
+                onClick={() => { setPhotoEdit((v) => !v); setNotice(photoEdit ? '' : '已开启引用点编辑：拖动地图上的圆点即可自定义照片引线起点；完成后关闭再导出。'); }}
+                title="开启后可拖动地图上的圆点，自定义照片引线的起点位置"
+              >
+                <Crosshair size={16} />{photoEdit ? '编辑中…' : '自定义引用点'}
+              </button>
+              {photoAnchors && (photoAnchors.card1 || photoAnchors.card2) && (
+                <button type="button" onClick={() => { setPhotoAnchors(null); setNotice('照片引用点已重置为自动中点。'); }} title="清除自定义引用点，恢复自动中点">
+                  <RotateCcw size={16} />重置引用点
+                </button>
+              )}
+            </>
+          )}
+          <button type="button" onClick={exportSvg} disabled={!datasets || !modelReady || photoEdit} title={photoEdit ? '请先关闭引用点编辑' : '下载矢量 SVG'}><FileCode2 size={16} />下载 SVG</button>
+          <button type="button" className="primary" onClick={exportPng} disabled={!datasets || !modelReady || exporting || photoEdit} title={photoEdit ? '请先关闭引用点编辑' : '下载高清 PNG'}><Download size={16} />{exporting ? '生成中…' : '下载高清 PNG'}</button>
+          <button type="button" onClick={() => window.print()} disabled={!datasets || !modelReady || photoEdit} title={photoEdit ? '请先关闭引用点编辑' : '打印'}><Printer size={16} />打印</button>
         </div>
       </header>
 
@@ -219,6 +242,9 @@ export default function PosterApp() {
               modelReady={modelReady}
               onModelReadyChange={setModelReady}
               route={activeRoute}
+              photoEdit={photoEdit}
+              photoAnchors={photoAnchors}
+              onPhotoAnchorChange={setPhotoAnchors}
             />
           ) : (
             <div className="poster-state"><span className="poster-loader" /><strong>正在生成静态校园底图</strong><span>读取建筑、道路与水系矢量数据…</span></div>
