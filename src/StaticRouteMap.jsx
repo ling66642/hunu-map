@@ -571,7 +571,7 @@ const StaticRouteMap = forwardRef(function StaticRouteMap({ datasets, modelReady
         <g className="route-background-layer">
           <image
             className="route-background-image"
-            href="/images/road_bg.jpg"
+            href="/images/school_gate.jpg"
             x="0"
             y="0"
             width={SVG_WIDTH}
