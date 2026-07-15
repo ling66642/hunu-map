@@ -548,7 +548,6 @@ const StaticRouteMap = forwardRef(function StaticRouteMap({ datasets, modelReady
           text { font-family: "Microsoft YaHei", "PingFang SC", "Noto Sans CJK SC", sans-serif; }
           .poster-kicker { font-size: 18px; font-weight: 700; letter-spacing: 7px; fill: #8b6b32; }
           .poster-title { font-family: "STSong", "SimSun", serif; font-size: 53px; font-weight: 700; letter-spacing: 5px; fill: #173f3a; }
-          .route-a-title { font-size: 61px; letter-spacing: 6px; paint-order: stroke; stroke: #fff8e7; stroke-width: 8px; stroke-opacity: 0.86; stroke-linejoin: round; }
           .poster-subtitle { font-size: 14px; font-weight: 700; letter-spacing: 4px; fill: #7f887f; }
           .poster-description { font-size: 17px; fill: #586761; }
           .overview-labels text { font-size: 9.2px; font-weight: 700; fill: #38554e; paint-order: stroke; stroke: #f4f0e5; stroke-width: 3.2px; stroke-linejoin: round; }
@@ -567,46 +566,25 @@ const StaticRouteMap = forwardRef(function StaticRouteMap({ datasets, modelReady
 
       <rect width={SVG_WIDTH} height={SVG_HEIGHT} fill="url(#paperGradient)" />
       <rect width={SVG_WIDTH} height={SVG_HEIGHT} fill="url(#paperNoise)" />
-      {route.id === 'routeA' && (
-        <g className="route-background-layer">
-          <image
-            className="route-background-image"
-            href="/images/school_gate.jpg"
-            x="0"
-            y="0"
-            width={SVG_WIDTH}
-            height={SVG_HEIGHT}
-            preserveAspectRatio="xMidYMid slice"
-            opacity="0.5"
-          />
-          <rect x="42" y="1010" width="1516" height="48" fill="#f7f3e9" fillOpacity="0.68" />
-        </g>
-      )}
       <path d="M28 28 H1572 V1072 H28 Z" fill="none" stroke="#b9ad94" strokeWidth="1.4" />
       <path d="M42 42 H1558 V1058 H42 Z" fill="none" stroke="#d6cdbb" strokeWidth="0.8" />
 
-      {route.id === 'routeA' ? (
-        <text x="84" y="137" className="poster-title route-a-title">校园漫步路线A</text>
-      ) : (
-        <>
-          <g transform="translate(78 76)">
-            <rect width="88" height="88" rx="10" fill="#174b45" />
-            <text x="44" y="59" textAnchor="middle" fontFamily="STKaiti, KaiTi, serif" fontSize="43" fontWeight="700" fill="#f4e4bd">师</text>
-          </g>
-          <text x="193" y="93" className="poster-kicker">湖南师范大学 · 二里半校区</text>
-          <text x="193" y="151" className="poster-title">{STATIC_ROUTE_LABEL[route.id] || route.posterTitle}</text>
-          <text x="196" y="183" className="poster-subtitle">{route.subtitle}</text>
+      <g transform="translate(78 76)">
+        <rect width="88" height="88" rx="10" fill="#174b45" />
+        <text x="44" y="59" textAnchor="middle" fontFamily="STKaiti, KaiTi, serif" fontSize="43" fontWeight="700" fill="#f4e4bd">师</text>
+      </g>
+      <text x="193" y="93" className="poster-kicker">湖南师范大学 · 二里半校区</text>
+      <text x="193" y="151" className="poster-title">{STATIC_ROUTE_LABEL[route.id] || route.posterTitle}</text>
+      <text x="196" y="183" className="poster-subtitle">{route.subtitle}</text>
 
-          <g transform="translate(1080 76)">
-            <rect width="430" height="103" rx="9" fill="#f8f4ea" stroke="#d4cbb8" />
-            <rect width="7" height="103" rx="3.5" fill={route.color} />
-            <text x="27" y="31" className="route-meta">{route.id === 'none' ? '校园静态总览' : `${route.shortTitle} · ${route.time} · ${route.stops.length} 个途经点`}</text>
-            <text x="27" y="58" fontSize="13" fill="#66736d">
-              {descriptionLines.map((line, index) => <tspan key={line} x="27" dy={index ? 22 : 0}>{line}</tspan>)}
-            </text>
-          </g>
-        </>
-      )}
+      <g transform="translate(1080 76)">
+        <rect width="430" height="103" rx="9" fill="#f8f4ea" stroke="#d4cbb8" />
+        <rect width="7" height="103" rx="3.5" fill={route.color} />
+        <text x="27" y="31" className="route-meta">{route.id === 'none' ? '校园静态总览' : `${route.shortTitle} · ${route.time} · ${route.stops.length} 个途经点`}</text>
+        <text x="27" y="58" fontSize="13" fill="#66736d">
+          {descriptionLines.map((line, index) => <tspan key={line} x="27" dy={index ? 22 : 0}>{line}</tspan>)}
+        </text>
+      </g>
 
       <g filter="url(#softShadow)">
         <path d={boundaryPath} transform="translate(10 14)" fill={mapPalette.boundaryShadow} opacity="0.18" />
