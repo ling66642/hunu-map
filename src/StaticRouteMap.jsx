@@ -1,5 +1,6 @@
 import React, { forwardRef, useMemo, useRef, useState } from 'react';
 import RouteModelLayer from './RouteModelLayer';
+import { assetUrl } from './assetUrl';
 
 function mergeRefs(...refs) {
   return (node) => {
@@ -727,7 +728,7 @@ const StaticRouteMap = forwardRef(function StaticRouteMap({ datasets, modelReady
           />
           <g transform="translate(760 280)">
             <rect width="160" height="130" rx="7" fill="#fffdf7" stroke="#d8d0bf" strokeWidth="1.5" />
-            <image href="/images/road_bg.jpg" x="5" y="5" width="150" height="95" preserveAspectRatio="xMidYMid slice" clipPath="url(#photoClip)" />
+            <image href={assetUrl('/images/road_bg.jpg')} x="5" y="5" width="150" height="95" preserveAspectRatio="xMidYMid slice" clipPath="url(#photoClip)" />
             <rect x="5" y="100" width="150" height="25" rx="0" fill="#f8f4e9" />
             <text x="80" y="117" textAnchor="middle" className="map-note" style={{ fontSize: '10px', letterSpacing: '0.5px' }}>法桐大道（终点前）</text>
           </g>
@@ -749,7 +750,7 @@ const StaticRouteMap = forwardRef(function StaticRouteMap({ datasets, modelReady
           />
           <g transform="translate(390 735)">
             <rect width="160" height="130" rx="7" fill="#fffdf7" stroke="#d8d0bf" strokeWidth="1.5" />
-            <image href="/images/street_spring.jpg" x="5" y="5" width="150" height="95" preserveAspectRatio="xMidYMid slice" clipPath="url(#photoClip)" />
+            <image href={assetUrl('/images/street_spring.jpg')} x="5" y="5" width="150" height="95" preserveAspectRatio="xMidYMid slice" clipPath="url(#photoClip)" />
             <rect x="5" y="100" width="150" height="25" rx="0" fill="#f8f4e9" />
             <text x="80" y="117" textAnchor="middle" className="map-note" style={{ fontSize: '10px', letterSpacing: '0.5px' }}>中和楼前（途经点 2—3）</text>
           </g>

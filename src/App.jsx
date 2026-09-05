@@ -5,6 +5,7 @@ import {
   Search, Trees, Utensils, X
 } from 'lucide-react';
 import MapContainer from './components/MapContainer';
+import { assetUrl } from './assetUrl';
 
 const categories = [
   { id: 'all', label: '全部建筑', icon: Map },
@@ -74,10 +75,10 @@ export default function App() {
 
   useEffect(() => {
     Promise.all([
-      fetch('/data/erliban_boundary.geojson').then((res) => res.json()),
-      fetch('/data/erliban_buildings.geojson').then((res) => res.json()),
-      fetch('/data/erliban_roads.geojson').then((res) => res.json()),
-      fetch('/data/erliban_water.geojson').then((res) => res.json())
+      fetch(assetUrl('/data/erliban_boundary.geojson')).then((res) => res.json()),
+      fetch(assetUrl('/data/erliban_buildings.geojson')).then((res) => res.json()),
+      fetch(assetUrl('/data/erliban_roads.geojson')).then((res) => res.json()),
+      fetch(assetUrl('/data/erliban_water.geojson')).then((res) => res.json())
     ]).then(([boundary, buildings, roads, water]) => {
       buildings.features = buildings.features.map((feature, index) => ({
         ...feature,
@@ -111,7 +112,7 @@ export default function App() {
     <div className="site-shell">
       <header className="site-header">
         <a className="brand" href="#top" aria-label="湖南师范大学二里半校园导览首页">
-          <img src="/images/师大校徽.webp" alt="湖南师范大学校徽" className="brand-seal" />
+          <img src={assetUrl('/images/师大校徽.webp')} alt="湖南师范大学校徽" className="brand-seal" />
           <span><strong>湖南师范大学</strong><small>二里半校园导览</small></span>
         </a>
         <nav className={menuOpen ? 'main-nav open' : 'main-nav'}>
@@ -223,7 +224,7 @@ export default function App() {
         </section>
       </main>
 
-      <footer><div className="footer-brand"><img src="/images/师大校徽.webp" alt="湖南师范大学校徽" className="brand-seal" /><span><strong>湖南师范大学</strong><small>二里半校园导览地图</small></span></div><p>本页面为校园导览设计示范 · 地图数据来源于本地二里半矢量底图</p><a href="#top">返回顶部 ↑</a></footer>
+      <footer><div className="footer-brand"><img src={assetUrl('/images/师大校徽.webp')} alt="湖南师范大学校徽" className="brand-seal" /><span><strong>湖南师范大学</strong><small>二里半校园导览地图</small></span></div><p>本页面为校园导览设计示范 · 地图数据来源于本地二里半矢量底图</p><a href="#top">返回顶部 ↑</a></footer>
     </div>
   );
 }

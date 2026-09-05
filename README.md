@@ -1,16 +1,130 @@
-# React + Vite
+# 湖南师范大学二里半校区校园导览系统
 
-This template provides a minimal setup to get React working in Vite with HMR and some Oxlint rules.
+一个面向湖南师范大学二里半校区的 WebGIS 校园导览应用。系统以校区矢量底图为基础，融合三维建筑模型、主题游览路线与建筑图文信息，提供**交互式地图查询**与**路线静态成图导出**两大核心能力。
 
-Currently, two official plugins are available:
+---
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+## 一、项目简介
 
-## React Compiler
+二里半校区共有 **75 栋建筑**。本项目围绕该校区实现了：
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+- **校园矢量底图**：基于自主处理的 GeoJSON 数据，渲染校区边界、建筑轮廓、道路网络与水系；
+- **三维建筑模型**：使用 Three.js 加载校区整体三维模型（贴图模型与白模两套），叠加于二维地图之上；
+- **主题游览路线**：预设 5 条主题路线 + 1 张全校总览，覆盖红色基因、历史底蕴、学术氛围、学子励志、湖湘文化等主题；
+- **静态成图导出**：将任一路线渲染为海报式静态地图，可导出矢量 SVG 或 3200×2200 高清 PNG，用于打印与汇报。
 
-## Expanding the Oxlint configuration
+## 二、技术栈
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and Oxlint's TypeScript related rules in your project.
+| 类别 | 技术 | 用途 |
+| --- | --- | --- |
+| 前端框架 | React 19 | 组件化 UI 构建 |
+| 构建工具 | Vite 8 | 开发服务器与生产构建（多入口配置） |
+| 地图渲染 | Leaflet 1.9 | 底图展示、缩放平移、图层控制 |
+| 三维渲染 | Three.js | 加载并渲染 OBJ/MTL 三维建筑模型 |
+| 图标 | lucide-react | 界面图标 |
+| 数据格式 | GeoJSON / OBJ+MTL | 矢量底图与三维模型 |
+
+**本项目为纯前端静态应用，不包含任何后端服务。** 所有空间数据、三维模型与业务数据均以静态资源形式随前端一同分发，运行时通过 `fetch` 读取本地 GeoJSON 文件，全部计算与渲染均在浏览器端完成；用户的个性化配置（如自定义照片引用点）保存在浏览器 `localStorage` 中，无需服务器与数据库支持。
+
+## 三、页面与功能
+
+### 1. 导览首页 · `index.html`
+- 校区概览与建筑分类浏览（教学科研、图书文化、体育活动、餐饮生活、学生宿舍）；
+- 建筑关键词搜索与快速定位；
+- 推荐路线卡片展示。
+
+### 2. 交互地图 · `map.html`
+- Leaflet 底图：支持缩放、平移、图层切换；
+- 建筑分类筛选与详情查看（含实景照片与文字介绍）；
+- 路线播放：按途经点顺序切换，联动建筑介绍卡片；
+- 三维模型叠加展示。
+
+### 3. 路线静态成图 · `poster.html`
+- 将路线渲染为海报风格的静态 SVG 地图，含标题栏、图例、指北针、比例尺；
+- 支持在地图上叠加实景照片卡片，并通过折线引线连接到路线上的指定位置；
+- **自定义引用点**：可开启编辑模式，拖动地图上的手柄自由指定照片引线的起点，并保存设置（持久化到浏览器本地）；
+- 一键导出 **SVG**（矢量，图片以 Data URL 内嵌）或 **3200×2200 高清 PNG**。
+
+## 四、数据来源与处理
+
+| 数据 | 格式 | 说明 |
+| --- | --- | --- |
+| 校区边界 / 建筑 / 道路 / 水系 | GeoJSON | 二里半校区矢量底图，位于 `public/data/` |
+| 体育场地 / 体育场馆 | GeoJSON | 专题要素数据 |
+| 三维建筑模型 | OBJ + MTL + JPG | 贴图模型与白模各一套，位于 `public/models/` |
+| 建筑实景照片 | JPG | 位于 `public/images/buildings/` |
+| 路线与建筑介绍 | JS 模块 | 位于 `src/data/routes.js` |
+
+**坐标处理**：原始矢量数据为 WGS-84 坐标，为与麓山路一带的底图对齐，系统在前端实现了 **WGS-84 → GCJ-02（火星坐标系）** 的转换算法（见 `src/CampusMapApp.jsx`），在数据加载时统一完成投影纠正。
+
+## 五、本地运行
+
+### 环境要求
+- **Node.js 20 及以上版本**（Vite 8 的要求）
+
+### 方式一：一键启动（推荐）
+双击项目根目录的 **`启动地图.bat`**。脚本会自动检测 Node 环境、按需安装依赖、启动开发服务器并在浏览器中打开页面。
+
+### 方式二：命令行
+```bash
+npm install      # 安装依赖
+npm run dev      # 启动开发服务器（默认 http://localhost:5173）
+```
+
+开发服务器启动后：
+- 首页：http://localhost:5173/index.html
+- 交互地图：http://localhost:5173/map.html
+- 静态成图：http://localhost:5173/poster.html
+
+其他命令：
+```bash
+npm run build    # 生产构建，产物输出到 dist/
+npm run preview  # 本地预览构建产物
+npm run lint     # 代码检查
+```
+
+> **注意**：请通过开发服务器或任意静态服务器访问页面。项目使用 ES 模块与 `fetch` 加载数据，**直接双击 `index.html` 以 `file://` 协议打开会被浏览器的安全策略拦截，导致页面无法正常加载**。
+
+## 六、构建与部署
+
+```bash
+npm run build
+```
+
+构建产物位于 `dist/`，为纯静态文件，可直接托管到任意静态服务器或对象存储。
+
+项目已做好**子路径部署适配**：所有资源路径通过 `src/assetUrl.js` 统一基于 Vite 的 `BASE_URL` 生成相对路径，因此无论部署在站点根目录还是子目录（如 `https://<用户名>.github.io/hunu-map/`）都能正常访问。
+
+**部署到 GitHub Pages 的步骤：**
+1. 执行 `npm run build` 并将改动推送到 GitHub；
+2. 进入仓库 **Settings → Pages**；
+3. Source 选择 **Deploy from a branch**，分支选择 `main`、目录选择 **`/ (root)`**（若只托管构建产物，也可改用 `gh-pages` 分支或 `/docs` 目录）；
+4. 保存后等待约 1–2 分钟，即可通过生成的网址访问。
+
+## 七、目录结构
+
+```
+hunu-map-main/
+├── index.html            # 导览首页入口
+├── map.html              # 交互地图入口
+├── poster.html           # 静态成图入口
+├── public/               # 静态资源（原样复制到 dist）
+│   ├── data/             # GeoJSON 矢量底图数据
+│   ├── images/           # 校徽、建筑实景照片等
+│   └── models/           # 三维模型（OBJ/MTL/贴图）
+├── src/
+│   ├── App.jsx               # 首页
+│   ├── CampusMapApp.jsx      # 交互地图
+│   ├── PosterApp.jsx         # 静态成图
+│   ├── StaticRouteMap.jsx    # 静态地图 SVG 渲染
+│   ├── RouteModelLayer.jsx   # 三维模型图层
+│   ├── assetUrl.js           # 资源路径统一处理（适配子路径部署）
+│   ├── components/           # 地图容器等通用组件
+│   └── data/routes.js        # 路线与途经点数据
+├── gis_source/           # GIS 数据处理脚本与原始 Shapefile
+└── dist/                 # 生产构建产物
+```
+
+## 八、浏览器兼容性
+
+建议使用 Chrome、Edge、Firefox 或 Safari 的现代版本。三维模型渲染依赖 WebGL，请确保浏览器已启用硬件加速。

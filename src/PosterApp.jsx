@@ -2,12 +2,13 @@ import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { Check, ChevronLeft, ChevronRight, Crosshair, Download, FileCode2, Map, Printer, RotateCcw, Route as RouteIcon } from 'lucide-react';
 import StaticRouteMap from './StaticRouteMap';
 import { routes } from './data/routes';
+import { assetUrl } from './assetUrl';
 
 const datasetFiles = [
-  ['boundary', '/data/erliban_boundary.geojson'],
-  ['buildings', '/data/erliban_buildings.geojson'],
-  ['roads', '/data/erliban_roads.geojson'],
-  ['water', '/data/erliban_water.geojson'],
+  ['boundary', assetUrl('/data/erliban_boundary.geojson')],
+  ['buildings', assetUrl('/data/erliban_buildings.geojson')],
+  ['roads', assetUrl('/data/erliban_roads.geojson')],
+  ['water', assetUrl('/data/erliban_water.geojson')],
 ];
 
 function fileName(route, extension) {
@@ -221,14 +222,14 @@ export default function PosterApp() {
   return (
     <div className="poster-page">
       <header className="poster-toolbar">
-        <a className="poster-brand" href="/">
-          <img src="/images/师大校徽.webp" alt="湖南师范大学校徽" className="poster-brand-seal" />
+        <a className="poster-brand" href={assetUrl('/')}>
+          <img src={assetUrl('/images/师大校徽.webp')} alt="湖南师范大学校徽" className="poster-brand-seal" />
           <span><strong>湖南师范大学</strong><small>二里半校园导览</small></span>
         </a>
 
         <nav className="map-mode-switch" aria-label="地图模式切换">
-          <a href="/map.html"><Map size={15} />交互地图</a>
-          <a className="active" href="/poster.html"><RouteIcon size={15} />静态成图</a>
+          <a href={assetUrl('/map.html')}><Map size={15} />交互地图</a>
+          <a className="active" href={assetUrl('/poster.html')}><RouteIcon size={15} />静态成图</a>
         </nav>
 
         <div className="poster-toolbar-actions">
