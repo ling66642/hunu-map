@@ -2,10 +2,13 @@
   "name": "hnu-map",
   "private": true,
   "version": "0.0.0",
+  "engines": {
+    "node": ">=20.19"
+  },
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "vite build",
+    "build": "vite build && node -e \"require('fs').rmSync('dist/index.html',{force:true})\"",
     "lint": "oxlint",
     "preview": "vite preview"
   },
