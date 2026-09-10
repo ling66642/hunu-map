@@ -50,8 +50,38 @@ const routeStopDetails = {
   '经纬楼': {
     image: assetUrl('/images/buildings/jingwei-building.jpg'),
     eyebrow: '经天纬地 · 地理学科',
-    description: '经纬楼是地理科学学院的教学楼。学院实力雄厚，地理学科是湖南省“十四五”重点学科，在教育部第五轮学科评估中位居全国前列。',
+    description: '经纬楼是地理科学学院的教学楼。学院实力雄厚，地理学科是湖南省"十四五"重点学科，在教育部第五轮学科评估中位居全国前列。',
     tags: ['国家一流专业', '重点实验室', '科研殿堂']
+  },
+  '江湾体育场': {
+    image: assetUrl('/images/buildings/jiangwan-stadium.jpg'),
+    eyebrow: '汗水飞扬 · 体育底蕴',
+    description: '江湾体育场是校园体育活动的核心场地，承载着田径运动、球类比赛与大型集会等功能，是师大学子挥洒汗水、强健体魄的重要场所。',
+    tags: ['体育场馆', '田径运动', '校园活力']
+  },
+  '理学院': {
+    image: assetUrl('/images/buildings/lixueyuan.jpg'),
+    eyebrow: '探索真理 · 理学基地',
+    description: '理学院是学校理科教学与科研的重要基地，汇聚数学、物理、化学等基础学科力量，培养具有扎实理论基础与创新能力的复合型人才。',
+    tags: ['理科教学', '基础学科', '科研创新']
+  },
+  '景德楼': {
+    image: assetUrl('/images/buildings/jingde-building.jpg'),
+    eyebrow: '厚德载物 · 人文社会',
+    description: '景德楼是人文社会学科的重要教学场所，承载着哲学、历史、社会学等学科的日常教学与学术研讨，是校园人文气息浓厚的地标之一。',
+    tags: ['人文社科', '教学殿堂', '学术交流']
+  },
+  '忠烈祠': {
+    image: assetUrl('/images/buildings/zhonglieci.jpg'),
+    eyebrow: '英烈不朽 · 爱国教育',
+    description: '忠烈祠是湖南师范大学的红色地标，纪念抗战英烈，传承爱国主义精神。这里是学校开展国防教育与思政教育的重要阵地。',
+    tags: ['红色地标', '爱国教育', '抗战纪念']
+  },
+  '研五舍': {
+    image: assetUrl('/images/buildings/yanwushe.jpg'),
+    eyebrow: '求知若渴 · 研究生宿舍',
+    description: '研五舍是研究生住宿区的重要组成部分，为研究生提供舒适的居住环境与便利的学习生活条件，是研究生求学岁月中的重要家园。',
+    tags: ['研究生宿舍', '生活空间', '温馨港湾']
   }
 };
 
